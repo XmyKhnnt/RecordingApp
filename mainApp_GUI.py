@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,
                              QVBoxLayout, QWidget, QGraphicsDropShadowEffect, 
                              QTextEdit, QSizePolicy)
 
+
 from PyQt5.QtGui import QColor, QTextOption
 
 class MainWindow(QMainWindow):
@@ -14,7 +15,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         # set window title and size
         self.setWindowTitle("Gwapo Ko")
-        self.setMinimumSize(800, 300)
+        self.setMinimumSize(800, 600)
         self.setStyleSheet("Background-color: white;")
 
         # Shadows
@@ -107,7 +108,7 @@ class MainWindow(QMainWindow):
         self.main_layout.addWidget(self.scroll_area)
 
         # Scroll Area Layout Designs
-        self.scroll_area.setMinimumHeight(300)
+        # self.scroll_area.setMinimumHeight(300)
         self.scroll_area.setStyleSheet("""
             border: none;
             background-color: #e9e9e9;
@@ -144,14 +145,35 @@ class MainWindow(QMainWindow):
         self.add_frame_button.clicked.connect(self.add_new_frame)
         self.main_layout.addWidget(self.add_frame_button)
 
-        self.dummy_label = QLabel("label2")
-        self.dummy_label1 = QLabel("label2")
-        self.dummy_label2 = QLabel("label2")
+        # Visulizer Module
+        # Recording Widget
+        self.visualizer = QFrame()
+        self.visualizer_layout = QHBoxLayout(self.visualizer)
 
-        self.main_layout.addWidget(self.dummy_label)
-        self.main_layout.addWidget(self.dummy_label1)
-        self.main_layout.addWidget(self.dummy_label2)
+        # Dummy Content
+        self.label_visualizer = QLabel("Audio Visulizer Module")
+        self.visualizer_layout.addWidget(self.label_visualizer)
 
+        self.visualizer.setMinimumHeight(150)
+        self.visualizer.setStyleSheet("background-color: gray;")
+
+        self.record_widget = QWidget()
+        self.record_widget_layout = QHBoxLayout(self.record_widget)
+
+        self.pause_play_btn = QPushButton("Plat/puase")
+        self.restart = QPushButton("Restart")
+        self.play = QPushButton("Play")
+
+        self.record_widget_layout.addWidget(self.visualizer)
+        self.record_widget_layout.addWidget(self.restart)
+        self.record_widget_layout.addWidget(self.pause_play_btn)
+        self.record_widget_layout.addWidget(self.play)
+
+
+        self.main_layout.addWidget(self.visualizer)
+        self.main_layout.addWidget(self.record_widget)
+
+        
 
 
         self.add_new_frame()
@@ -177,7 +199,7 @@ class MainWindow(QMainWindow):
         new_frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         new_frame.setStyleSheet("""
         border-radius: 10px;
-        background-color: #a2edee;
+        background-color: #b7bbbb;
         """)
 
 
