@@ -10,13 +10,14 @@ from PyQt5.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
-from PyQt5.QtGui import QColor, QTextOption, QIcon, QFont
+from PyQt5.QtGui import QColor, QTextOption, QIcon, QFont, QPixmap
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         # set window title and size
         self.setWindowTitle("Logo Brand")
+        self.setWindowIcon(QIcon("play_btn.png"))
         self.setMinimumSize(800, 600)
         self.setStyleSheet("Background-color: white;")
 
@@ -65,31 +66,50 @@ class MainWindow(QMainWindow):
 
             }
             QPushButton:hover {
-                background-color: #115687;
+                background-color:#1d41FF;
+            }
+            QPushButton:pressed {
+                background-color: #1d86d0;
             }
         """)
         self.save_btn.setFixedSize(QSize(85, 25))
 
         # import_btn 
         self.import_btn.setStyleSheet("""
-            background-color: #4b4b4b; 
-            Border: none; 
-            border-radius: 12px;
-            color: white;
-            font-size: 18px;
-            padding-bottom: 2px;
+            QPushButton {
+                background-color: #4b4b4b; 
+                Border: none; 
+                border-radius: 12px;
+                color: white;
+                font-size: 18px;
+                padding-bottom: 2px;
+                }
+            QPushButton:hover {
+                background-color:black;
+            }
+            QPushButton:pressed {
+                background-color: #4b4b4b;
+            }
         """)
 
         self.import_btn.setFixedSize(QSize(85, 25))
 
         # Export btn
         self.export_btn.setStyleSheet("""
-            background-color: #4b4b4b; 
-            Border: none; 
-            border-radius: 12px;
-            color: white;
-            font-size: 18px;
-            padding-bottom: 2px;
+           QPushButton {
+                background-color: #4b4b4b; 
+                Border: none; 
+                border-radius: 12px;
+                color: white;
+                font-size: 18px;
+                padding-bottom: 2px;
+                }
+            QPushButton:hover {
+                background-color:black;
+            }
+            QPushButton:pressed {
+                background-color: #4b4b4b;
+            }
         """)
 
         self.export_btn.setFixedSize(QSize(85, 25))
@@ -97,12 +117,21 @@ class MainWindow(QMainWindow):
         self.add_frame_button.setFixedSize(QSize(25, 25))
         self.add_frame_button.clicked.connect(self.add_new_frame)
         self.add_frame_button.setStyleSheet("""
-             background-color: #1d86d0; 
-             Border: none; 
-             border-radius: 12px;
-             color: white;
-             font-size: 18px;
-             padding-bottom: 2px;
+            QPushButton {
+                background-color: #1d86d0; 
+                Border: none; 
+                border-radius: 12px;
+                color: white;
+                font-size: 18px;
+                padding-bottom: 2px;
+             }
+             QPushButton:hover {
+                background-color: #1d41FF; 
+             }
+             QPushButton:pressed {
+                background-color: #1d86d0;
+            }
+
             
          """)
 
@@ -205,36 +234,65 @@ class MainWindow(QMainWindow):
         # Buttons Design PLAY/RECORD/RESTART
 
         self.pause.setStyleSheet("""
+        QPushButton {
             background-color:#b7b7b7; 
             Border: none; 
             border-radius: 20px;
             color: white;
             font-size: 18px;
+        }
+
+        QPushButton:hover {
+            background-color:black;
+
+        }
+        QPushButton:pressed {
+            background-color:#b7b7b7;
+
+        }
+            
 
         """)
         
         self.record.setStyleSheet("""
+        QPushButton {
             background-color: red; 
             Border: none; 
             border-radius: 22px;
             color: white;
             font-size: 18px;
             padding-bottom: 2px;
-        
+            }
+        QPushButton:hover {
+            background-color:#a70000;
+
+        }
+        QPushButton:pressed {
+            background-color:red;
+        }
         """)
 
         self.play.setStyleSheet(""" 
+        QPushButton {
             Border: none; 
             border-radius: 20px;
             color: black;
             font-size: 18px;
+        }
+        QPushButton:hover {
+            border: 1px solid black;
+        }
+        QPushButton:pressed {
+            border: 0px solid black;
+        }
+            
                
         """)
 
         # Set Buttons Sizes
         self.record.setFixedSize(QSize(45, 45))
         self.pause.setFixedSize(QSize(40, 40))
-        self.play.setFixedSize(QSize(40, 40))
+        self.play.setFixedSize(QSize(45, 45))
 
 
         #Set Icons To buttons
