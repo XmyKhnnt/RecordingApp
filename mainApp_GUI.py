@@ -1,20 +1,22 @@
 import sys
 
-
-from PyQt5.QtCore import QSize, Qt
+from PyQt5 import QtCore
+from PyQt5.QtCore import QSize, Qt, QTimer
 from PyQt5.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,
                              QMainWindow, QPushButton, QScrollArea,
                              QVBoxLayout, QWidget, QGraphicsDropShadowEffect, 
                              QTextEdit, QSizePolicy)
 
-
-from PyQt5.QtGui import QColor, QTextOption
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+import numpy as np
+from PyQt5.QtGui import QColor, QTextOption, QIcon, QFont
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         # set window title and size
-        self.setWindowTitle("Gwapo Ko")
+        self.setWindowTitle("Logo Brand")
         self.setMinimumSize(800, 600)
         self.setStyleSheet("Background-color: white;")
 
@@ -91,24 +93,45 @@ class MainWindow(QMainWindow):
         """)
 
         self.export_btn.setFixedSize(QSize(85, 25))
+        self.add_frame_button = QPushButton("+")
+        self.add_frame_button.setFixedSize(QSize(25, 25))
+        self.add_frame_button.clicked.connect(self.add_new_frame)
+        self.add_frame_button.setStyleSheet("""
+             background-color: #1d86d0; 
+             Border: none; 
+             border-radius: 12px;
+             color: white;
+             font-size: 18px;
+             padding-bottom: 2px;
+            
+         """)
 
 # ------------------------------------------------------------
         self.button_layout.addStretch(1)
+        self.button_layout.addWidget(self.add_frame_button)
         self.button_layout.addWidget(self.import_btn)
         self.button_layout.addWidget(self.export_btn)
         self.button_layout.addWidget(self.save_btn)
+
+
+
+
+
         
         self.main_layout.addWidget(self.buttons_widget)
         
 
-  
+        
         # create scroll area and add to main layout
         self.scroll_area = QScrollArea()
+        self.scroll_area.setMinimumHeight(300)
+        # Scroll area Layout Manager
         self.scroll_area.setWidgetResizable(True)
+
+
         self.main_layout.addWidget(self.scroll_area)
 
         # Scroll Area Layout Designs
-        # self.scroll_area.setMinimumHeight(300)
         self.scroll_area.setStyleSheet("""
             border: none;
             background-color: #e9e9e9;
@@ -126,52 +149,132 @@ class MainWindow(QMainWindow):
         self.scroll_area_layout.setAlignment(Qt.AlignTop)
 
         # create button to add new frames
-        self.add_frame_button = QPushButton("add")
-
-        self.add_frame_button.setStyleSheet("""
-            background-color: #1d86d0; 
-            Border: none; 
-            border-radius: 12px;
-            color: white;
-            font-size: 18px;
-            padding-bottom: 2px;
+        # self.add_frame_button = QPushButton("add")
+        # self.add_frame_button.setStyleSheet("""
+        #     background-color: #1d86d0; 
+        #     Border: none; 
+        #     border-radius: 12px;
+        #     color: white;
+        #     font-size: 18px;
+        #     padding-bottom: 2px;
             
-        """)
+        # """)
 
-        self.dummy_label = QLabel(" ") # added empty label for spacing hahah
-        self.main_layout.addWidget(self.dummy_label)
-        self.add_frame_button.setFixedSize(QSize(85, 25))
-
-        self.add_frame_button.clicked.connect(self.add_new_frame)
-        self.main_layout.addWidget(self.add_frame_button)
+        # # self.dummy_label = QLabel(" ") # added empty label for spacing hahah
+        # # self.main_layout.addWidget(self.dummy_label)
+        # self.add_frame_button.setFixedSize(QSize(85, 25))
+        # self.add_frame_button.clicked.connect(self.add_new_frame)
+        # self.main_layout.addWidget(self.add_frame_button)
 
         # Visulizer Module
         # Recording Widget
         self.visualizer = QFrame()
         self.visualizer_layout = QHBoxLayout(self.visualizer)
+        self.visualizer.setMaximumHeight(50)
 
         # Dummy Content
-        self.label_visualizer = QLabel("Audio Visulizer Module")
-        self.visualizer_layout.addWidget(self.label_visualizer)
-
         self.visualizer.setMinimumHeight(150)
-        self.visualizer.setStyleSheet("background-color: gray;")
+        
+
+        # Create a Matplotlib Figure object
+        self.fig = Figure(figsize=(5, 4), dpi=100)
+        self.axes = self.fig.add_subplot(111)
+
+        # Create a Matplotlib canvas and add it to the main window
+        self.canvas = FigureCanvas(self.fig)
+        self.canvas.setParent(self.visualizer)  
+
+        self.visualizer_layout.addWidget(self.canvas)
+
+
+
+
 
         self.record_widget = QWidget()
-        self.record_widget_layout = QHBoxLayout(self.record_widget)
+        self.record_widget_layout = QVBoxLayout(self.record_widget)
+        
 
-        self.pause_play_btn = QPushButton("Plat/puase")
-        self.restart = QPushButton("Restart")
-        self.play = QPushButton("Play")
+   
+        # Record Widget Layout Size
+       
+
+        self.record = QPushButton("REC")
+        self.play = QPushButton()
+        self.pause = QPushButton()
+
+        # Buttons Design PLAY/RECORD/RESTART
+
+        self.pause.setStyleSheet("""
+            background-color:#b7b7b7; 
+            Border: none; 
+            border-radius: 20px;
+            color: white;
+            font-size: 18px;
+
+        """)
+        
+        self.record.setStyleSheet("""
+            background-color: red; 
+            Border: none; 
+            border-radius: 22px;
+            color: white;
+            font-size: 18px;
+            padding-bottom: 2px;
+        
+        """)
+
+        self.play.setStyleSheet(""" 
+            Border: none; 
+            border-radius: 20px;
+            color: black;
+            font-size: 18px;
+               
+        """)
+
+        # Set Buttons Sizes
+        self.record.setFixedSize(QSize(45, 45))
+        self.pause.setFixedSize(QSize(40, 40))
+        self.play.setFixedSize(QSize(40, 40))
+
+
+        #Set Icons To buttons
+        self.play.setIcon(QIcon("play_btn.png"))
+        self.play.setIconSize(QSize(41,40))
+
+        self.pause.setIcon(QIcon("pause-btn.png"))
+        self.pause.setIconSize(QSize(28,28))
+
+        # Qt Timer
+        self.timer = QLabel("00:00:00")
+        self.timer.setStyleSheet("""
+            font-size: 16pt;
+        """)
+        self.timer.setAlignment(Qt.AlignCenter)
 
         self.record_widget_layout.addWidget(self.visualizer)
-        self.record_widget_layout.addWidget(self.restart)
-        self.record_widget_layout.addWidget(self.pause_play_btn)
-        self.record_widget_layout.addWidget(self.play)
+
+        # Recording Button Layout
+        self.recording_buttons_widget = QWidget()
+        self.recording_buttons_layout = QHBoxLayout(self.recording_buttons_widget)
+
+
+
+        
+        self.recording_buttons_layout.addWidget(self.pause)
+        self.recording_buttons_layout.addWidget(self.record)
+        self.recording_buttons_layout.addWidget(self.play)
+
+        self.record_widget_layout.addWidget(self.timer)
+        self.record_widget_layout.addWidget(self.recording_buttons_widget)
+
+        self.record_widget_layout.setAlignment(Qt.AlignCenter)
 
 
         self.main_layout.addWidget(self.visualizer)
         self.main_layout.addWidget(self.record_widget)
+
+
+        # Timer
 
         
 
@@ -214,7 +317,10 @@ class MainWindow(QMainWindow):
         text_place_holder = QTextEdit()
         # text_place_holder Design
         text_place_holder.setPlaceholderText("Enter your text here...")
-        text_place_holder.setFontPointSize(10)
+        font = QFont()
+        font.setPointSize(12)
+        text_place_holder.setFont(font)
+        text_place_holder.setFontPointSize(12)
 
         text_option = QTextOption()
         text_option.setWrapMode(QTextOption.WrapAnywhere)
