@@ -1,21 +1,26 @@
 import sys
+
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QKeyEvent,QKeySequence
 from PyQt5 import QtCore
 from PyQt5.QtCore import QSize, Qt, QTimer
-from PyQt5.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,
-                             QMainWindow, QPushButton, QScrollArea,
+from PyQt5.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,QLineEdit,
+                             QMainWindow,  QPushButton, QScrollArea,
                              QVBoxLayout, QWidget, QGraphicsDropShadowEffect, 
                              QTextEdit, QSizePolicy)
+                             
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
 from PyQt5.QtGui import QColor, QTextOption, QIcon, QFont, QPixmap
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         # set window title and size
-
+        self.setFocusPolicy(Qt.StrongFocus)
         self.setWindowTitle("Logo Brand")
         self.setWindowIcon(QIcon("play_btn.png"))
         self.setMinimumSize(800, 600)
@@ -128,7 +133,8 @@ class MainWindow(QMainWindow):
         self.export_btn.setFixedSize(QSize(85, 25))
         self.add_frame_button = QPushButton("+")
         self.add_frame_button.setFixedSize(QSize(25, 25))
-        self.add_frame_button.clicked.connect(self.add_new_frame)
+        # self.add_frame_button.clicked.connect(self.add_new_frame)
+
         self.add_frame_button.setStyleSheet("""
             QPushButton {
                 background-color: #1d86d0; 
@@ -298,8 +304,7 @@ class MainWindow(QMainWindow):
         QPushButton:pressed {
             border: 0px solid black;
         }
-            
-               
+                
         """)
 
         # Set Buttons Sizes
@@ -345,16 +350,57 @@ class MainWindow(QMainWindow):
         self.main_layout.addWidget(self.record_widget)
 
 
-        # Timer
-        self.add_new_frame()
+        # New Frome Instance
+        self.new_frame = newFrame()
+
+        self.scroll_area_layout.addWidget(self.new_frame)
+    
         # set central widget
         self.setCentralWidget(self.central_widget)
+        self.new_frame.text_place_holder.setFocus()
 
-    def add_new_frame(self):
-        # create new frame and add to scroll area
-        new_frame = QFrame()
-        new_frame.setFrameShape(QFrame.Box)
-        new_frame_layout = QVBoxLayout(new_frame)
+       
+
+    def seperatorSentence(self):
+        seperated = " ".join(self.new_frame.text_place_holder.toPlainText().split(".")[1:])
+        print(type(seperated))
+      
+        return seperated
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
+            
+            if len(self.new_frame.text_place_holder.toPlainText().splitlines()) > 1:
+                
+                for add_frame in range(1,len(self.new_frame.text_place_holder.toPlainText().splitlines())):
+                    setFrameText = self.new_frame.text_place_holder.toPlainText().splitlines()[add_frame]
+                    
+                    # create new frame and add to scroll area
+                    newFrame_instance = newFrame()
+                    newFrame_instance.setFrameText(setFrameText)
+                    
+
+                    self.scroll_area_layout.addWidget(newFrame_instance)
+                    
+                    
+            self.new_frame.text_place_holder.setText(self.new_frame.text_place_holder.toPlainText().splitlines()[0])  
+
+                
+        else:
+            super().keyPressEvent(event)
+
+
+
+
+
+
+class newFrame(QFrame):
+    def __init__(self):
+        super().__init__()
+
+        self.setFrameShape(QFrame.Box)
+        
+        self.new_frame_layout = QVBoxLayout(self)
 
         # Shadow
         shadow = QGraphicsDropShadowEffect()
@@ -364,19 +410,18 @@ class MainWindow(QMainWindow):
         shadow.setColor(QColor(0, 0, 0, 60))
 
         # QFrame Layout Design 
-        new_frame.setMinimumHeight(150)
-        new_frame.setMaximumHeight(200)
-        new_frame.setGraphicsEffect(shadow)
-        new_frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        new_frame.setStyleSheet("""
+        self.setMinimumHeight(150)
+        self.setMaximumHeight(200)
+        self.setGraphicsEffect(shadow)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setStyleSheet("""
         border-radius: 10px;
         background-color: #b7bbbb;
         """)
 
-        # Sequence No. and X Button
         # Btn Layout
-        frame_btn = QPushButton("X")
-        frame_btn.setStyleSheet("""
+        self.frame_btn = QPushButton("X")
+        self.frame_btn.setStyleSheet("""
         QPushButton {
             background-color:red;
         }
@@ -390,48 +435,54 @@ class MainWindow(QMainWindow):
             background-color:red;
         }
         """)
-        frame_btn.clicked.connect(lambda: delete_frame(new_frame))
-        new_frame_layout.addWidget(frame_btn,0, Qt.AlignRight)
+        self.frame_btn.clicked.connect(lambda: delete_frame(self))
+        self.new_frame_layout.addWidget(self.frame_btn,0, Qt.AlignRight)
         
-        frame_btn.setFixedSize(QSize(20, 20))
-        text_place_holder = QTextEdit()
+        self.frame_btn.setFixedSize(QSize(20, 20))
+        self.text_place_holder = QTextEdit()
+        self.text_place_holder.setPlaceholderText("Enter your text here...")
+        
         # text_place_holder Design
-        text_place_holder.setPlaceholderText("Enter your text here...")
-        font = QFont()
-        font.setPointSize(12)
-        text_place_holder.setFont(font)
-        text_place_holder.setFontPointSize(12)
-        text_place_holder.setMinimumHeight(60)
+        self.font = QFont()
+        self.font.setPointSize(12)
+        self.text_place_holder.setFont(self.font)
+        self.text_place_holder.setFontPointSize(12)
+        self.text_place_holder.setMinimumHeight(60)
 
-        text_option = QTextOption()
-        text_option.setWrapMode(QTextOption.WrapAnywhere)
-        text_place_holder.document().setDefaultTextOption(text_option)
+        self.text_option = QTextOption()
+        self.text_option.setWrapMode(QTextOption.WrapAnywhere)
+        self.text_place_holder.document().setDefaultTextOption(self.text_option)
 
-        text_place_holder.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.text_place_holder.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        text_place_holder.setStyleSheet("""
+        self.text_place_holder.setStyleSheet("""
         background-color: white;
         """)
-  
-        new_frame_layout.addWidget(text_place_holder)
+
+        self.new_frame_layout.addWidget(self.text_place_holder)
         # Timer
-        timer = QLabel()
-        timer.setText("00:00:00")
-        timer.setAlignment(Qt.AlignRight)
-        timer.setStyleSheet("""
+        self.timer = QLabel()
+        self.timer.setText("00:00:00")
+        self.timer.setAlignment(Qt.AlignRight)
+        self.timer.setStyleSheet("""
         margin-right: 10px;
         font-size: 16px;
         color: white;
-      
-        """)
-        new_frame_layout.addWidget(timer)
 
-        self.scroll_area_layout.addWidget(new_frame)
-        
+        """)
+        self.new_frame_layout.addWidget(self.timer)
+
 
         def delete_frame(frame):
 
             frame.deleteLater()
+
+    def setFrameText(self, setFrameText):
+
+        self.text_place_holder.setText(setFrameText)
+
+
+
 
 
 if __name__ == "__main__":
