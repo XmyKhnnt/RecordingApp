@@ -1,6 +1,4 @@
 import sys
-
-
 from PyQt5 import QtCore
 from PyQt5.QtCore import QSize, Qt, QTimer
 from PyQt5.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,
