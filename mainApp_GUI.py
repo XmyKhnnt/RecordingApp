@@ -1,5 +1,6 @@
 import sys
 
+
 from PyQt5 import QtCore
 from PyQt5.QtCore import QSize, Qt, QTimer
 from PyQt5.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,
@@ -16,10 +17,13 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         # set window title and size
+
         self.setWindowTitle("Logo Brand")
         self.setWindowIcon(QIcon("play_btn.png"))
         self.setMinimumSize(800, 600)
-        self.setStyleSheet("Background-color: white;")
+        self.setStyleSheet("Background-color: White;")
+        QApplication.setWindowIcon(QIcon('play_btn.png'))
+        
 
         # Shadows
         self.shadow = QGraphicsDropShadowEffect()
@@ -34,15 +38,26 @@ class MainWindow(QMainWindow):
 
         # tile Widget
         self.title = QLabel()
-        self.title.setText('Recording 1')
-        self.main_layout.addWidget(self.title)
+        self.title.setText('Title')
+        self.title.setStyleSheet("""
+        font-size: 18px;
+        font-weight: 350;
+        letter-spacing: 2px;
+        """)
+        # self.main_layout.addWidget(self.title)
+
+        # Title and Button
+        self.title_and_button = QWidget()
+        self.title_and_button_layout = QHBoxLayout(self.title_and_button)
+        self.title_and_button_layout.addWidget(self.title)
+        
 
         # Buttons
         self.buttons_widget = QWidget()
         self.button_layout = QHBoxLayout(self.buttons_widget)
 
         self.save_btn = QPushButton("save")
-        self.import_btn = QPushButton("imoprt")
+        self.import_btn = QPushButton("import")
         self.export_btn = QPushButton("export")
 
         # Set Shadow to buttons
@@ -146,8 +161,8 @@ class MainWindow(QMainWindow):
 
 
 
-        
-        self.main_layout.addWidget(self.buttons_widget)
+        self.title_and_button_layout.addWidget(self.buttons_widget)
+        self.main_layout.addWidget(self.title_and_button)
         
 
         
@@ -333,10 +348,6 @@ class MainWindow(QMainWindow):
 
 
         # Timer
-
-        
-
-
         self.add_new_frame()
         # set central widget
         self.setCentralWidget(self.central_widget)
@@ -355,7 +366,8 @@ class MainWindow(QMainWindow):
         shadow.setColor(QColor(0, 0, 0, 60))
 
         # QFrame Layout Design 
-        new_frame.setFixedHeight(100)
+        new_frame.setMinimumHeight(150)
+        new_frame.setMaximumHeight(200)
         new_frame.setGraphicsEffect(shadow)
         new_frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         new_frame.setStyleSheet("""
@@ -363,11 +375,23 @@ class MainWindow(QMainWindow):
         background-color: #b7bbbb;
         """)
 
-
+        # Sequence No. and X Button
         # Btn Layout
-
         frame_btn = QPushButton("X")
-        frame_btn.setStyleSheet("background-color:red;")
+        frame_btn.setStyleSheet("""
+        QPushButton {
+            background-color:red;
+        }
+
+        QPushButton:hover{
+            background-color:#ff3d3d;
+            border: 1 solid #e10000;
+
+        }
+        QPushButton:pressed {
+            background-color:red;
+        }
+        """)
         frame_btn.clicked.connect(lambda: delete_frame(new_frame))
         new_frame_layout.addWidget(frame_btn,0, Qt.AlignRight)
         
@@ -379,6 +403,7 @@ class MainWindow(QMainWindow):
         font.setPointSize(12)
         text_place_holder.setFont(font)
         text_place_holder.setFontPointSize(12)
+        text_place_holder.setMinimumHeight(60)
 
         text_option = QTextOption()
         text_option.setWrapMode(QTextOption.WrapAnywhere)
@@ -391,8 +416,20 @@ class MainWindow(QMainWindow):
         """)
   
         new_frame_layout.addWidget(text_place_holder)
+        # Timer
+        timer = QLabel()
+        timer.setText("00:00:00")
+        timer.setAlignment(Qt.AlignRight)
+        timer.setStyleSheet("""
+        margin-right: 10px;
+        font-size: 16px;
+        color: white;
+      
+        """)
+        new_frame_layout.addWidget(timer)
 
         self.scroll_area_layout.addWidget(new_frame)
+        
 
         def delete_frame(frame):
 
