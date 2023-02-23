@@ -1,21 +1,26 @@
 import sys
+
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QKeyEvent,QKeySequence
 from PyQt5 import QtCore
 from PyQt5.QtCore import QSize, Qt, QTimer
-from PyQt5.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,
-                             QMainWindow, QPushButton, QScrollArea,
+from PyQt5.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,QLineEdit,
+                             QMainWindow,  QPushButton, QScrollArea,
                              QVBoxLayout, QWidget, QGraphicsDropShadowEffect, 
                              QTextEdit, QSizePolicy)
+                             
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
 from PyQt5.QtGui import QColor, QTextOption, QIcon, QFont, QPixmap
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         # set window title and size
-
+        self.setFocusPolicy(Qt.StrongFocus)
         self.setWindowTitle("Logo Brand")
         self.setWindowIcon(QIcon("play_btn.png"))
         self.setMinimumSize(800, 600)
@@ -128,7 +133,8 @@ class MainWindow(QMainWindow):
         self.export_btn.setFixedSize(QSize(85, 25))
         self.add_frame_button = QPushButton("+")
         self.add_frame_button.setFixedSize(QSize(25, 25))
-        self.add_frame_button.clicked.connect(self.add_new_frame)
+        # self.add_frame_button.clicked.connect(self.add_new_frame)
+
         self.add_frame_button.setStyleSheet("""
             QPushButton {
                 background-color: #1d86d0; 
@@ -189,24 +195,7 @@ class MainWindow(QMainWindow):
         # create layout for container widget
         self.scroll_area_layout = QVBoxLayout(self.scroll_area_widget)
         self.scroll_area_layout.setAlignment(Qt.AlignTop)
-
-        # create button to add new frames
-        # self.add_frame_button = QPushButton("add")
-        # self.add_frame_button.setStyleSheet("""
-        #     background-color: #1d86d0; 
-        #     Border: none; 
-        #     border-radius: 12px;
-        #     color: white;
-        #     font-size: 18px;
-        #     padding-bottom: 2px;
-            
-        # """)
-
-        # # self.dummy_label = QLabel(" ") # added empty label for spacing hahah
-        # # self.main_layout.addWidget(self.dummy_label)
-        # self.add_frame_button.setFixedSize(QSize(85, 25))
-        # self.add_frame_button.clicked.connect(self.add_new_frame)
-        # self.main_layout.addWidget(self.add_frame_button)
+        
 
         # Visulizer Module
         # Recording Widget
@@ -298,8 +287,7 @@ class MainWindow(QMainWindow):
         QPushButton:pressed {
             border: 0px solid black;
         }
-            
-               
+                
         """)
 
         # Set Buttons Sizes
@@ -329,6 +317,9 @@ class MainWindow(QMainWindow):
         self.recording_buttons_layout = QHBoxLayout(self.recording_buttons_widget)
 
 
+        # Connections
+        self.record.clicked.connect(self.rec_button)
+
 
         
         self.recording_buttons_layout.addWidget(self.pause)
@@ -344,17 +335,91 @@ class MainWindow(QMainWindow):
         self.main_layout.addWidget(self.visualizer)
         self.main_layout.addWidget(self.record_widget)
 
-
-        # Timer
-        self.add_new_frame()
+        
+        # New Frome Instance
+        
+        self.new_frame = newFrame(self.scroll_area_widget)
+        self.active_frame = self.new_frame
+        self.new_frame.setActiveFrame(self.active_frame)
+        
+        self.scroll_area_layout.addWidget(self.new_frame)
+        
+    
+    
         # set central widget
         self.setCentralWidget(self.central_widget)
+        self.new_frame.text_place_holder.setFocus()
 
-    def add_new_frame(self):
-        # create new frame and add to scroll area
-        new_frame = QFrame()
-        new_frame.setFrameShape(QFrame.Box)
-        new_frame_layout = QVBoxLayout(new_frame)
+       
+
+    def seperatorSentence(self):
+        seperated = " ".join(self.new_frame.text_place_holder.toPlainText().split(".")[1:])
+        print(type(seperated))
+      
+        return seperated
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
+            
+            if len(self.new_frame.text_place_holder.toPlainText().splitlines()) > 1:
+                
+                for add_frame in range(1,len(self.new_frame.text_place_holder.toPlainText().splitlines())):
+                    setFrameText = self.new_frame.text_place_holder.toPlainText().splitlines()[add_frame]
+                    
+                    # create new frame and add to scroll area
+                    newFrame_instance = newFrame(self.scroll_area_widget)
+                    newFrame_instance.setActiveFrame(self.active_frame)
+                    newFrame_instance.setFrameText(setFrameText)
+                    
+
+                    self.scroll_area_layout.addWidget(newFrame_instance)
+                    
+                    
+            self.new_frame.text_place_holder.setText(self.new_frame.text_place_holder.toPlainText().splitlines()[0])  
+
+                
+        else:
+            super().keyPressEvent(event)
+        
+
+    def rec_button(self):
+        self.activeFrameSelector()
+        pass
+
+        # Dummy Event
+
+    # Loop throught all the Frame 
+    def activeFrameSelector(self):
+        for i in range(self.scroll_area_layout.count()):
+
+            item = self.scroll_area_layout.itemAt(i)
+
+            active_fave = item.widget()
+
+            if active_fave.isActive == True:
+
+                self.active_frame = active_fave
+                
+                text = active_fave.text_place_holder.toPlainText()
+                print(text)
+            # else:
+            #     # print("No Active Frame")
+
+    
+
+class newFrame(QFrame):
+    def __init__(self, scroll_area):
+        super().__init__()
+
+        self.active_frame_selected = None
+        self.for_scroll_counter = scroll_area
+
+        self.isActive = False
+
+        self.setFrameShape(QFrame.Box)
+        
+
+        self.new_frame_layout = QVBoxLayout(self)
 
         # Shadow
         shadow = QGraphicsDropShadowEffect()
@@ -363,22 +428,31 @@ class MainWindow(QMainWindow):
         shadow.setYOffset(0)
         shadow.setColor(QColor(0, 0, 0, 60))
 
+    
+
         # QFrame Layout Design 
-        new_frame.setMinimumHeight(150)
-        new_frame.setMaximumHeight(200)
-        new_frame.setGraphicsEffect(shadow)
-        new_frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        new_frame.setStyleSheet("""
-        border-radius: 10px;
-        background-color: #b7bbbb;
+        self.setMinimumHeight(150)
+        self.setMaximumHeight(200)
+        self.setGraphicsEffect(shadow)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setStyleSheet("""
+        
+        QFrame {
+            border: none;
+            border-radius: 10px;
+            background-color: white;
+        }
+        QFrame:hover {
+            border: 1px solid gray;
+        }
         """)
 
-        # Sequence No. and X Button
         # Btn Layout
-        frame_btn = QPushButton("X")
-        frame_btn.setStyleSheet("""
+        self.frame_btn = QPushButton("X")
+        self.frame_btn.setStyleSheet("""
         QPushButton {
             background-color:red;
+            border-radius: 10px;
         }
 
         QPushButton:hover{
@@ -390,48 +464,98 @@ class MainWindow(QMainWindow):
             background-color:red;
         }
         """)
-        frame_btn.clicked.connect(lambda: delete_frame(new_frame))
-        new_frame_layout.addWidget(frame_btn,0, Qt.AlignRight)
+        self.frame_btn.clicked.connect(lambda: delete_frame(self))
+        self.new_frame_layout.addWidget(self.frame_btn,0, Qt.AlignRight)
         
-        frame_btn.setFixedSize(QSize(20, 20))
-        text_place_holder = QTextEdit()
+        self.frame_btn.setFixedSize(QSize(20, 20))
+        self.text_place_holder = QTextEdit()
+        self.text_place_holder.setPlaceholderText("Enter your text here...")
+        
         # text_place_holder Design
-        text_place_holder.setPlaceholderText("Enter your text here...")
-        font = QFont()
-        font.setPointSize(12)
-        text_place_holder.setFont(font)
-        text_place_holder.setFontPointSize(12)
-        text_place_holder.setMinimumHeight(60)
+        self.font = QFont()
+        self.font.setPointSize(12)
+        self.text_place_holder.setFont(self.font)
+        self.text_place_holder.setFontPointSize(12)
+        self.text_place_holder.setMinimumHeight(60)
 
-        text_option = QTextOption()
-        text_option.setWrapMode(QTextOption.WrapAnywhere)
-        text_place_holder.document().setDefaultTextOption(text_option)
+        self.text_option = QTextOption()
+        self.text_option.setWrapMode(QTextOption.WrapAnywhere)
+        self.text_place_holder.document().setDefaultTextOption(self.text_option)
 
-        text_place_holder.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.text_place_holder.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        text_place_holder.setStyleSheet("""
-        background-color: white;
+        self.text_place_holder.setStyleSheet("""
+        QTextEdit {
+            border-radius: 5px;
+            background-color: white;
+        }
+        QTextEdit:hover {
+            border: none;
+        }
         """)
-  
-        new_frame_layout.addWidget(text_place_holder)
+
+        self.new_frame_layout.addWidget(self.text_place_holder)
         # Timer
-        timer = QLabel()
-        timer.setText("00:00:00")
-        timer.setAlignment(Qt.AlignRight)
-        timer.setStyleSheet("""
-        margin-right: 10px;
-        font-size: 16px;
-        color: white;
-      
-        """)
-        new_frame_layout.addWidget(timer)
+        self.timer = QLabel()
+        self.timer.setText("00:00:00")
+        self.timer.setAlignment(Qt.AlignRight)
+        self.timer.setStyleSheet("""
+        QLabel {
+            margin-right: 10px;
+            font-size: 16px;
+            color:gray;
+        }
 
-        self.scroll_area_layout.addWidget(new_frame)
+        QLabel:hover {
+            border: none;
+        }
         
+
+        """)
+        self.new_frame_layout.addWidget(self.timer)
+
 
         def delete_frame(frame):
 
             frame.deleteLater()
+
+    def setActiveFrame(self,active_frave):
+        self.active_frame_selected = active_frave
+
+    def setFrameText(self, setFrameText):
+
+        self.text_place_holder.setText(setFrameText)
+    
+    # Added onClick Event
+
+    def scroll_area_frame_counter(self, frame):
+       for i in range(frame.layout().count()):
+        widget = frame.layout().itemAt(i).widget()
+
+        if isinstance(widget, newFrame):
+            widget.isActive = False
+            widget.setStyleSheet("""
+            background-color: white;
+            """)
+            
+            
+    def onClick(self, event):
+        if event.button() == Qt.LeftButton:
+            # loop throught list of frame
+            # Create a list of frames
+            # This function will produce an error becasue its not finish
+            self.scroll_area_frame_counter(self.for_scroll_counter)
+        
+            self.isActive = True
+            self.setStyleSheet("""
+            background-color: red;
+            """)
+            
+        super().mousePressEvent(event)
+
+    def mousePressEvent(self, event):
+        self.onClick(event)
+
 
 
 if __name__ == "__main__":
