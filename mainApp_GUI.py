@@ -1,4 +1,5 @@
 import sys
+from microphone import AudioHandler
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QKeyEvent,QKeySequence
@@ -27,7 +28,7 @@ class MainWindow(QMainWindow):
         self.setStyleSheet("Background-color: White;")
         QApplication.setWindowIcon(QIcon('play_btn.png'))
         
-
+        self.audio_handler =AudioHandler()
         # Shadows
         self.shadow = QGraphicsDropShadowEffect()
         self.shadow.setBlurRadius(10)
@@ -204,8 +205,7 @@ class MainWindow(QMainWindow):
         self.visualizer.setMaximumHeight(50)
 
         # Dummy Content
-        self.visualizer.setMinimumHeight(150)
-        
+        self.visualizer.setMinimumHeight(150) 
 
         # Create a Matplotlib Figure object
         self.fig = Figure(figsize=(5, 4), dpi=100)
@@ -216,10 +216,6 @@ class MainWindow(QMainWindow):
         self.canvas.setParent(self.visualizer)  
 
         self.visualizer_layout.addWidget(self.canvas)
-
-
-
-
 
         self.record_widget = QWidget()
         self.record_widget_layout = QVBoxLayout(self.record_widget)
@@ -232,6 +228,10 @@ class MainWindow(QMainWindow):
         self.record = QPushButton("REC")
         self.play = QPushButton()
         self.pause = QPushButton()
+
+        self.record.clicked.connect(self.start_recording)
+        self.play.clicked.connect(self.play_recording)
+        self.pause.clicked.connect(self.pause_recording)
 
         # Buttons Design PLAY/RECORD/RESTART
 
@@ -316,11 +316,6 @@ class MainWindow(QMainWindow):
         self.recording_buttons_widget = QWidget()
         self.recording_buttons_layout = QHBoxLayout(self.recording_buttons_widget)
 
-
-        # Connections
-        self.record.clicked.connect(self.rec_button)
-
-
         
         self.recording_buttons_layout.addWidget(self.pause)
         self.recording_buttons_layout.addWidget(self.record)
@@ -343,14 +338,14 @@ class MainWindow(QMainWindow):
         self.new_frame.setActiveFrame(self.active_frame)
         
         self.scroll_area_layout.addWidget(self.new_frame)
-        
-    
-    
+
         # set central widget
         self.setCentralWidget(self.central_widget)
         self.new_frame.text_place_holder.setFocus()
 
        
+        self.start_pause = True
+        self.playback_start_pause = True
 
     def seperatorSentence(self):
         seperated = " ".join(self.new_frame.text_place_holder.toPlainText().split(".")[1:])
@@ -382,12 +377,6 @@ class MainWindow(QMainWindow):
             super().keyPressEvent(event)
         
 
-    def rec_button(self):
-        active_frame = self.activeFrameSelector()
-        active_frame.setStyleSheet("""
-        background-color: green;
-        """)
-        
 
         # Dummy Event
 
@@ -405,6 +394,41 @@ class MainWindow(QMainWindow):
                 return self.active_frame
             # else:
             #     # print("No Active Frame")
+
+    def start_recording(self):
+
+        if self.start_pause == True:
+            self.record.setStyleSheet("""
+            QPushButton {
+                background-color:white ;
+                }
+            """)
+            self.audio_handler.start_recording("Recording")
+            self.start_pause == False
+            
+        elif self.start_pause ==False:
+            self.record.setStyleSheet("""
+            QPushButton {
+                background-color:red; }
+            """)
+            self.audio_handler.stop_recording()
+            self.start_pause == True
+            
+
+    def pause_recording(self):
+
+        self.audio_handler.pause_recording()
+    
+    def play_recording(self):
+
+        if self.playback_start_pause == True:
+            self.audio_handler.start_playback("Recording")
+            self.playback_start_pause == False
+            
+        elif self.playback_start_pause == False:
+            self.audio_handler.stop_playback()
+            self.playback_start_pause == True
+            
 
     
 
