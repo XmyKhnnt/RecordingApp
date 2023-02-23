@@ -335,7 +335,6 @@ class MainWindow(QMainWindow):
         self.main_layout.addWidget(self.visualizer)
         self.main_layout.addWidget(self.record_widget)
 
-<<<<<<< HEAD
         
         # New Frome Instance
         
@@ -346,13 +345,6 @@ class MainWindow(QMainWindow):
         self.scroll_area_layout.addWidget(self.new_frame)
         
     
-=======
-
-        # New Frome Instance
-        self.new_frame = newFrame()
-
-        self.scroll_area_layout.addWidget(self.new_frame)
->>>>>>> 998f135f4e824f7d8994998ca6402296ae954b23
     
         # set central widget
         self.setCentralWidget(self.central_widget)
@@ -375,12 +367,8 @@ class MainWindow(QMainWindow):
                     setFrameText = self.new_frame.text_place_holder.toPlainText().splitlines()[add_frame]
                     
                     # create new frame and add to scroll area
-<<<<<<< HEAD
                     newFrame_instance = newFrame(self.scroll_area_widget)
                     newFrame_instance.setActiveFrame(self.active_frame)
-=======
-                    newFrame_instance = newFrame()
->>>>>>> 998f135f4e824f7d8994998ca6402296ae954b23
                     newFrame_instance.setFrameText(setFrameText)
                     
 
@@ -392,12 +380,14 @@ class MainWindow(QMainWindow):
                 
         else:
             super().keyPressEvent(event)
-<<<<<<< HEAD
         
 
     def rec_button(self):
-        self.activeFrameSelector()
-        pass
+        active_frame = self.activeFrameSelector()
+        active_frame.setStyleSheet("""
+        background-color: green;
+        """)
+        
 
         # Dummy Event
 
@@ -412,9 +402,7 @@ class MainWindow(QMainWindow):
             if active_fave.isActive == True:
 
                 self.active_frame = active_fave
-                
-                text = active_fave.text_place_holder.toPlainText()
-                print(text)
+                return self.active_frame
             # else:
             #     # print("No Active Frame")
 
@@ -432,20 +420,6 @@ class newFrame(QFrame):
         self.setFrameShape(QFrame.Box)
         
 
-=======
-
-
-
-
-
-
-class newFrame(QFrame):
-    def __init__(self):
-        super().__init__()
-
-        self.setFrameShape(QFrame.Box)
-        
->>>>>>> 998f135f4e824f7d8994998ca6402296ae954b23
         self.new_frame_layout = QVBoxLayout(self)
 
         # Shadow
@@ -463,7 +437,6 @@ class newFrame(QFrame):
         self.setGraphicsEffect(shadow)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setStyleSheet("""
-<<<<<<< HEAD
         
         QFrame {
             border: none;
@@ -473,10 +446,6 @@ class newFrame(QFrame):
         QFrame:hover {
             border: 1px solid gray;
         }
-=======
-        border-radius: 10px;
-        background-color: #b7bbbb;
->>>>>>> 998f135f4e824f7d8994998ca6402296ae954b23
         """)
 
         # Btn Layout
@@ -517,7 +486,6 @@ class newFrame(QFrame):
         self.text_place_holder.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.text_place_holder.setStyleSheet("""
-<<<<<<< HEAD
         QTextEdit {
             border-radius: 5px;
             background-color: white;
@@ -525,9 +493,6 @@ class newFrame(QFrame):
         QTextEdit:hover {
             border: none;
         }
-=======
-        background-color: white;
->>>>>>> 998f135f4e824f7d8994998ca6402296ae954b23
         """)
 
         self.new_frame_layout.addWidget(self.text_place_holder)
@@ -536,7 +501,6 @@ class newFrame(QFrame):
         self.timer.setText("00:00:00")
         self.timer.setAlignment(Qt.AlignRight)
         self.timer.setStyleSheet("""
-<<<<<<< HEAD
         QLabel {
             margin-right: 10px;
             font-size: 16px;
@@ -547,15 +511,6 @@ class newFrame(QFrame):
             border: none;
         }
         
-=======
-        margin-right: 10px;
-        font-size: 16px;
-        color: white;
-
-        """)
-        self.new_frame_layout.addWidget(self.timer)
-
->>>>>>> 998f135f4e824f7d8994998ca6402296ae954b23
 
         """)
         self.new_frame_layout.addWidget(self.timer)
@@ -565,7 +520,6 @@ class newFrame(QFrame):
 
             frame.deleteLater()
 
-<<<<<<< HEAD
     def setActiveFrame(self,active_frave):
         self.active_frame_selected = active_frave
 
@@ -574,7 +528,7 @@ class newFrame(QFrame):
         self.text_place_holder.setText(setFrameText)
     
     # Added onClick Event
-
+    # Loop throu all the list in the Scroll Area and set isActive status to False
     def scroll_area_frame_counter(self, frame):
        for i in range(frame.layout().count()):
         widget = frame.layout().itemAt(i).widget()
@@ -588,9 +542,8 @@ class newFrame(QFrame):
             
     def onClick(self, event):
         if event.button() == Qt.LeftButton:
-            # loop throught list of frame
-            # Create a list of frames
-            # This function will produce an error becasue its not finish
+            
+            # scroll area frame counter function to revert the frame to previus state
             self.scroll_area_frame_counter(self.for_scroll_counter)
         
             self.isActive = True
@@ -602,13 +555,6 @@ class newFrame(QFrame):
 
     def mousePressEvent(self, event):
         self.onClick(event)
-=======
-    def setFrameText(self, setFrameText):
-
-        self.text_place_holder.setText(setFrameText)
-
-
->>>>>>> 998f135f4e824f7d8994998ca6402296ae954b23
 
 
 
