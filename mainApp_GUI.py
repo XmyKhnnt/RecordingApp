@@ -419,7 +419,7 @@ class MainWindow(QMainWindow):
             self.record.setIcon(QIcon("pause-btn.png"))
             self.record.setIconSize(QSize(32, 32))
             print(self.start_pause)
-            self.audio_handler.start_recording("Recording")
+            self.audio_handler.start_recording("recording.wav")
             self.start_pause = False
             # print(self.start_pause) Dummy
             
@@ -447,17 +447,38 @@ class MainWindow(QMainWindow):
             self.start_pause = True
             self.pause_recording()
             self.start_worker.quit()
+            self.start_worker.quit()
             # print(self.start_pause) Dumm
             
 
     def pause_recording(self):
+        self.record.setStyleSheet("""
+        QPushButton {
+            background-color: red; 
+            Border: none; 
+            border-radius: 22px;
+            color: white;
+            font-size: 18px;
+            padding-bottom: 2px;
+            }
+        QPushButton:hover {
+            background-color:#a70000;
 
+        }
+        QPushButton:pressed {
+            background-color:red;
+        }
+        """)
+        self.record.setIcon(QIcon())
+        self.record.setText("REC")
+        self.start_pause = True
         self.audio_handler.stop_recording()
+        self.start_worker.quit()
     
     def play_recording(self):
         
         if self.playback_start_pause:
-            self.audio_handler.start_playback("Recording")
+            self.audio_handler.start_playback("recording.wav")
             self.playback_start_pause = False
             
         elif self.playback_start_pause == False:
@@ -473,10 +494,6 @@ class MainWindow(QMainWindow):
         self.start_worker = Worker(self.start_recording)
         self.start_worker.start()
 
-
-            
-
-    
 
 class newFrame(QFrame):
     def __init__(self, scroll_area):
