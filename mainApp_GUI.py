@@ -4,7 +4,7 @@ from microphone import AudioHandler
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QKeyEvent,QKeySequence
 from PyQt5 import QtCore
-from PyQt5.QtCore import QSize, Qt, QTimer
+from PyQt5.QtCore import QSize, Qt, QTimer, QThread, pyqtSignal
 from PyQt5.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,QLineEdit,
                              QMainWindow,  QPushButton, QScrollArea,
                              QVBoxLayout, QWidget, QGraphicsDropShadowEffect, 
@@ -15,6 +15,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
 from PyQt5.QtGui import QColor, QTextOption, QIcon, QFont, QPixmap
+
 
 
 class MainWindow(QMainWindow):
@@ -223,21 +224,19 @@ class MainWindow(QMainWindow):
 
    
         # Record Widget Layout Size
-       
-
         self.record = QPushButton("REC")
         self.play = QPushButton()
         self.pause = QPushButton()
 
-        self.record.clicked.connect(self.start_recording)
-        self.play.clicked.connect(self.play_recording)
+        self.record.clicked.connect(self.start_recording_worker)
+        self.play.clicked.connect(self.play_recording_worker)
         self.pause.clicked.connect(self.pause_recording)
 
         # Buttons Design PLAY/RECORD/RESTART
 
         self.pause.setStyleSheet("""
         QPushButton {
-            background-color:#b7b7b7; 
+            background-color:red; 
             Border: none; 
             border-radius: 20px;
             color: white;
@@ -245,11 +244,11 @@ class MainWindow(QMainWindow):
         }
 
         QPushButton:hover {
-            background-color:black;
+            background-color:#a70000;
 
         }
         QPushButton:pressed {
-            background-color:#b7b7b7;
+            background-color:red;
 
         }
             
@@ -297,11 +296,12 @@ class MainWindow(QMainWindow):
 
 
         #Set Icons To buttons
+        self.pause.setIcon(QIcon("pause-btn.png"))
+        self.pause.setIconSize(QSize(41,40))
         self.play.setIcon(QIcon("play_btn.png"))
         self.play.setIconSize(QSize(41,40))
 
-        self.pause.setIcon(QIcon("pause-btn.png"))
-        self.pause.setIconSize(QSize(28,28))
+
 
         # Qt Timer
         self.timer = QLabel("00:00:00")
@@ -397,37 +397,83 @@ class MainWindow(QMainWindow):
 
     def start_recording(self):
 
-        if self.start_pause == True:
+        if self.start_pause:
             self.record.setStyleSheet("""
             QPushButton {
-                background-color:white ;
+                background-color: #b7b7b7; 
+                Border: none; 
+                border-radius: 22px;
+                color: white;
+                font-size: 18px;
+                padding-bottom: 0;
                 }
-            """)
+            QPushButton:hover {
+                background-color:#a70000;
+
+            }
+            QPushButton:pressed {
+                background-color:#b7b7b7;
+            }
+        """)
+            self.record.setText("")
+            self.record.setIcon(QIcon("pause-btn.png"))
+            self.record.setIconSize(QSize(32, 32))
+            print(self.start_pause)
             self.audio_handler.start_recording("Recording")
-            self.start_pause == False
+            self.start_pause = False
+            # print(self.start_pause) Dummy
             
         elif self.start_pause ==False:
             self.record.setStyleSheet("""
             QPushButton {
-                background-color:red; }
+                background-color: red; 
+                Border: none; 
+                border-radius: 22px;
+                color: white;
+                font-size: 18px;
+                padding-bottom: 2px;
+                }
+            QPushButton:hover {
+                background-color:#a70000;
+
+            }
+            QPushButton:pressed {
+                background-color:red;
+            }
             """)
+            self.record.setIcon(QIcon())
+            self.record.setText("REC")
             self.audio_handler.stop_recording()
-            self.start_pause == True
+            self.start_pause = True
+            self.pause_recording()
+            self.start_worker.quit()
+            # print(self.start_pause) Dumm
             
 
     def pause_recording(self):
 
-        self.audio_handler.pause_recording()
+        self.audio_handler.stop_recording()
     
     def play_recording(self):
-
-        if self.playback_start_pause == True:
+        
+        if self.playback_start_pause:
             self.audio_handler.start_playback("Recording")
-            self.playback_start_pause == False
+            self.playback_start_pause = False
             
         elif self.playback_start_pause == False:
             self.audio_handler.stop_playback()
-            self.playback_start_pause == True
+            self.playback_start_pause = True
+            self.play_worker.quit()
+    
+    def play_recording_worker(self):
+        self.play_worker = Worker(self.play_recording)
+        self.play_worker.start()
+
+    def start_recording_worker(self):
+        self.start_worker = Worker(self.start_recording)
+        self.start_worker.start()
+
+
             
 
     
@@ -579,6 +625,22 @@ class newFrame(QFrame):
 
     def mousePressEvent(self, event):
         self.onClick(event)
+
+
+
+
+class Worker(QThread):
+    finished = pyqtSignal()
+    def __init__(self, task_func, parent=None):
+
+        super(Worker, self).__init__(parent)
+        self.task_func = task_func
+    
+    def run(self):
+        self.task_func()
+        self.finished.emit()
+
+        
 
 
 
