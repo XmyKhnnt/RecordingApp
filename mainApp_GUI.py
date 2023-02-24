@@ -1,4 +1,5 @@
 import sys
+import os
 from microphone import AudioHandler
 
 from PyQt5.QtCore import Qt
@@ -64,6 +65,9 @@ class MainWindow(QMainWindow):
         self.save_btn = QPushButton("save")
         self.import_btn = QPushButton("import")
         self.export_btn = QPushButton("export")
+
+        # Create Folder For storing recording
+        self.folderCreator()
 
         # Set Shadow to buttons
         ## Bug for for adding shadow
@@ -163,15 +167,9 @@ class MainWindow(QMainWindow):
         self.button_layout.addWidget(self.export_btn)
         self.button_layout.addWidget(self.save_btn)
 
-
-
-
-
         self.title_and_button_layout.addWidget(self.buttons_widget)
         self.main_layout.addWidget(self.title_and_button)
-        
-
-        
+   
         # create scroll area and add to main layout
         self.scroll_area = QScrollArea()
         self.scroll_area.setMinimumHeight(300)
@@ -222,11 +220,14 @@ class MainWindow(QMainWindow):
         self.record_widget_layout = QVBoxLayout(self.record_widget)
         
 
-   
         # Record Widget Layout Size
         self.record = QPushButton("REC")
         self.play = QPushButton()
         self.pause = QPushButton()
+
+        # Record Buttons States
+        self.play.setEnabled(False)
+        self.pause.setEnabled(False)
 
         self.record.clicked.connect(self.start_recording_worker)
         self.play.clicked.connect(self.play_recording_worker)
@@ -333,7 +334,7 @@ class MainWindow(QMainWindow):
         
         # New Frome Instance
         
-        self.new_frame = newFrame(self.scroll_area_widget)
+        self.new_frame = newFrame(self.scroll_area_widget,0)
         self.active_frame = self.new_frame
         self.new_frame.setActiveFrame(self.active_frame)
         
@@ -346,6 +347,15 @@ class MainWindow(QMainWindow):
        
         self.start_pause = True
         self.playback_start_pause = True
+
+
+    def folderCreator(self):
+        # Create a Folder For storing the Recording
+        self.folder_name = self.title.text()
+        if not os.path.exists(self.folder_name):
+            os.mkdir(self.folder_name)
+        else:
+            pass
 
     def seperatorSentence(self):
         seperated = " ".join(self.new_frame.text_place_holder.toPlainText().split(".")[1:])
@@ -362,13 +372,14 @@ class MainWindow(QMainWindow):
                     setFrameText = self.new_frame.text_place_holder.toPlainText().splitlines()[add_frame]
                     
                     # create new frame and add to scroll area
-                    newFrame_instance = newFrame(self.scroll_area_widget)
+                    newFrame_instance = newFrame(self.scroll_area_widget, add_frame)
                     newFrame_instance.setActiveFrame(self.active_frame)
                     newFrame_instance.setFrameText(setFrameText)
                     
+                    
 
                     self.scroll_area_layout.addWidget(newFrame_instance)
-                    
+                    print(newFrame_instance.sequence)
                     
             self.new_frame.text_place_holder.setText(self.new_frame.text_place_holder.toPlainText().splitlines()[0])  
 
@@ -376,9 +387,25 @@ class MainWindow(QMainWindow):
         else:
             super().keyPressEvent(event)
         
-
-
         # Dummy Event
+
+    # Select Frame
+    def recording_name(self):
+        active_frame = self.activeFrameSelector()
+        filename = f'frame_{active_frame.sequence}'
+        return filename
+
+    def frameSelector(self, frame_sequence_no):
+        for i in range(self.scroll_area_layout.count()):
+
+            item = self.scroll_area_layout.itemAt(i)
+
+            active_fave = item.widget()
+
+            if active_fave.sequence == frame_sequence_no:
+                return self.active_frame
+            else:
+                print("No frame selected")
 
     # Loop throught all the Frame 
     def activeFrameSelector(self):
@@ -396,58 +423,9 @@ class MainWindow(QMainWindow):
             #     # print("No Active Frame")
 
     def start_recording(self):
-
-        if self.start_pause:
-            self.record.setStyleSheet("""
-            QPushButton {
-                background-color: #b7b7b7; 
-                Border: none; 
-                border-radius: 22px;
-                color: white;
-                font-size: 18px;
-                padding-bottom: 0;
-                }
-            QPushButton:hover {
-                background-color:#a70000;
-
-            }
-            QPushButton:pressed {
-                background-color:#b7b7b7;
-            }
-        """)
-            self.record.setText("")
-            self.record.setIcon(QIcon("pause-btn.png"))
-            self.record.setIconSize(QSize(32, 32))
-            print(self.start_pause)
-            self.audio_handler.start_recording("recording.wav")
-            self.start_pause = False
-            # print(self.start_pause) Dummy
+            file = self.recording_name()
+            self.audio_handler.start_recording(self.folder_name,f"{file}.wav")
             
-        elif self.start_pause ==False:
-            self.record.setStyleSheet("""
-            QPushButton {
-                background-color: red; 
-                Border: none; 
-                border-radius: 22px;
-                color: white;
-                font-size: 18px;
-                padding-bottom: 2px;
-                }
-            QPushButton:hover {
-                background-color:#a70000;
-
-            }
-            QPushButton:pressed {
-                background-color:red;
-            }
-            """)
-            self.record.setIcon(QIcon())
-            self.record.setText("REC")
-            self.audio_handler.stop_recording()
-            self.start_pause = True
-            self.pause_recording()
-            self.start_worker.quit()
-            self.start_worker.quit()
             # print(self.start_pause) Dumm
             
 
@@ -474,39 +452,99 @@ class MainWindow(QMainWindow):
         self.start_pause = True
         self.audio_handler.stop_recording()
         self.start_worker.quit()
-    
+
     def play_recording(self):
+        file = self.recording_name()
+        self.audio_handler.start_playback(f"{file}.wav")
         
-        if self.playback_start_pause:
-            self.audio_handler.start_playback("recording.wav")
-            self.playback_start_pause = False
-            
-        elif self.playback_start_pause == False:
-            self.audio_handler.stop_playback()
-            self.playback_start_pause = True
-            self.play_worker.quit()
-    
     def play_recording_worker(self):
-        self.play_worker = Worker(self.play_recording)
-        self.play_worker.start()
+
+        try:
+            if self.playback_start_pause == True:
+
+                self.play.setIcon(QIcon("pause-btn.png"))
+                self.playback_start_pause = False
+                self.pause.setEnabled(False)
+                self.record.setEnabled(False)
+                self.play_worker = Worker(self.play_recording)
+                self.play_worker.start()
+            elif self.playback_start_pause == False:
+                self.audio_handler.stop_playback()
+                self.playback_start_pause = True
+                self.play_worker.quit()
+                self.pause.setEnabled(True)
+                self.record.setEnabled(True)
+        except:
+            print("Record Does not exist")
 
     def start_recording_worker(self):
-        self.start_worker = Worker(self.start_recording)
-        self.start_worker.start()
+        if self.start_pause == True:
+            self.record.setStyleSheet("""
+            QPushButton {
+                background-color: #b7b7b7; 
+                Border: none; 
+                border-radius: 22px;
+                color: white;
+                font-size: 18px;
+                padding-bottom: 0;
+                }
+            QPushButton:hover {
+                background-color:#a70000;
+
+            }
+            QPushButton:pressed {
+                background-color:#b7b7b7;
+            }
+        """)
+            self.record.setText("")
+            self.record.setIcon(QIcon("pause-btn.png"))
+            self.record.setIconSize(QSize(32, 32))
+            print(self.start_pause)
+            self.start_pause = False
+            self.start_worker = Worker(self.start_recording)
+            self.start_worker.start()
+
+
+        elif self.start_pause == False:
+            self.record.setStyleSheet("""
+            QPushButton {
+                background-color: red; 
+                Border: none; 
+                border-radius: 22px;
+                color: white;
+                font-size: 18px;
+                padding-bottom: 2px;
+                }
+            QPushButton:hover {
+                background-color:#a70000;
+
+            }
+            QPushButton:pressed {
+                background-color:red;
+            }
+            """)
+            self.record.setIcon(QIcon())
+            self.record.setText("REC")
+            self.audio_handler.stop_recording()
+            self.start_pause = True
+            self.start_worker.quit()
+            self.play.setEnabled(True)
+            self.pause.setEnabled(True)
+        else:
+            pass
 
 
 class newFrame(QFrame):
-    def __init__(self, scroll_area):
+    def __init__(self, scroll_area, count):
         super().__init__()
 
+        self.sequence = count
         self.active_frame_selected = None
         self.for_scroll_counter = scroll_area
 
         self.isActive = False
 
         self.setFrameShape(QFrame.Box)
-        
-
         self.new_frame_layout = QVBoxLayout(self)
 
         # Shadow
@@ -515,8 +553,6 @@ class newFrame(QFrame):
         shadow.setXOffset(0)
         shadow.setYOffset(0)
         shadow.setColor(QColor(0, 0, 0, 60))
-
-    
 
         # QFrame Layout Design 
         self.setMinimumHeight(150)
@@ -536,23 +572,43 @@ class newFrame(QFrame):
         """)
 
         # Btn Layout
-        self.frame_btn = QPushButton("X")
-        self.frame_btn.setStyleSheet("""
-        QPushButton {
-            background-color:red;
-            border-radius: 10px;
-        }
+        self.frame_btn = QPushButton()
+        if self.sequence == 0:
+            self.frame_btn = QPushButton("r")
+            self.frame_btn.setStyleSheet("""
+            QPushButton {
+                background-color:blue;
+                border-radius: 10px;
+            }
+            QPushButton:hover{
+                background-color:#ff3d3d;
+                border: 1 solid #e10000;
+            }
+            QPushButton:pressed {
+                background-color:blue;
+            }
+            """)
+            self.frame_btn.clicked.connect(self.clearText)
+        else:
 
-        QPushButton:hover{
-            background-color:#ff3d3d;
-            border: 1 solid #e10000;
+            self.frame_btn = QPushButton("X")
+            self.frame_btn.setStyleSheet("""
+            QPushButton {
+                background-color:red;
+                border-radius: 10px;
+            }
 
-        }
-        QPushButton:pressed {
-            background-color:red;
-        }
-        """)
-        self.frame_btn.clicked.connect(lambda: delete_frame(self))
+            QPushButton:hover{
+                background-color:#ff3d3d;
+                border: 1 solid #e10000;
+
+            }
+            QPushButton:pressed {
+                background-color:red;
+            }
+            """)
+            self.frame_btn.clicked.connect(lambda: delete_frame(self))
+
         self.new_frame_layout.addWidget(self.frame_btn,0, Qt.AlignRight)
         
         self.frame_btn.setFixedSize(QSize(20, 20))
@@ -598,7 +654,6 @@ class newFrame(QFrame):
             border: none;
         }
         
-
         """)
         self.new_frame_layout.addWidget(self.timer)
 
@@ -606,6 +661,9 @@ class newFrame(QFrame):
         def delete_frame(frame):
 
             frame.deleteLater()
+
+    def clearText(self):
+        self.text_place_holder.clear()
 
     def setActiveFrame(self,active_frave):
         self.active_frame_selected = active_frave
