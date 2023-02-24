@@ -1,6 +1,8 @@
 import pyaudio
 import wave
 import time
+
+
 class AudioHandler:
     def __init__(self, channels=1, rate=44100, chunk=1024):
         self.channels = channels
@@ -101,19 +103,20 @@ class AudioHandler:
     
     def __del__(self):
         self.p.terminate()
+
 if __name__ == '__main__':
     audio_handler = AudioHandler()
 
     # Record for 5 seconds
-    audio_handler.record_audio(duration=5)
+    audio_handler.start_recording()
 
     # Pause the recording for 2 seconds
     audio_handler.pause_recording()
     time.sleep(2)
-    audio_handler.pause_recording()
+ 
 
     # Record for another 5 seconds
-    audio_handler.record_audio(duration=5)
+    audio_handler.start_recording()
 
     # Stop the recording
     audio_handler.stop_recording()
