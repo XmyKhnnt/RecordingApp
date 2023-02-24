@@ -1,6 +1,7 @@
 import pyaudio
 import wave
 import time
+import os
 
 
 class AudioHandler:
@@ -16,7 +17,7 @@ class AudioHandler:
         self.stream = None
         self.wf = None
     
-    def start_recording(self, filename):
+    def start_recording(self, path, filename):
         if self.recording:
             print("Already recording!")
             return
@@ -41,7 +42,7 @@ class AudioHandler:
         self.stream.close()
         self.stream = None
         
-        self.wf = wave.open(filename, 'wb')
+        self.wf = wave.open(os.path.join(path, filename), 'wb')
         self.wf.setnchannels(self.channels)
         self.wf.setsampwidth(self.p.get_sample_size(pyaudio.paInt16))
         self.wf.setframerate(self.rate)
