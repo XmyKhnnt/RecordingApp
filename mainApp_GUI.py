@@ -1,22 +1,20 @@
-import sys
 import os
-from microphone import AudioHandler
+import sys
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QKeyEvent,QKeySequence
-from PyQt5 import QtCore
-from PyQt5.QtCore import QSize, Qt, QTimer, QThread, pyqtSignal
-from PyQt5.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,QLineEdit,
-                             QMainWindow,  QPushButton, QScrollArea,
-                             QVBoxLayout, QWidget, QGraphicsDropShadowEffect, 
-                             QTextEdit, QSizePolicy, QDialog)
-                             
-
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
 import numpy as np
-from PyQt5.QtGui import QColor, QTextOption, QIcon, QFont, QPixmap
+from matplotlib.backends.backend_qt5agg import \
+    FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+from PyQt5 import QtCore
+from PyQt5.QtCore import QSize, Qt, QThread, QTimer, pyqtSignal
+from PyQt5.QtGui import (QColor, QFont, QIcon, QKeyEvent, QKeySequence,
+                         QPixmap, QTextOption)
+from PyQt5.QtWidgets import (QApplication, QDialog, QFrame,
+                             QGraphicsDropShadowEffect, QHBoxLayout, QLabel,
+                             QLineEdit, QMainWindow, QPushButton, QScrollArea,
+                             QSizePolicy, QTextEdit, QVBoxLayout, QWidget)
 
+from microphone import AudioHandler
 
 
 class MainWindow(QMainWindow):
@@ -153,9 +151,10 @@ class MainWindow(QMainWindow):
         """)
 
         self.export_btn.setFixedSize(QSize(85, 25))
-        self.add_frame_button = QPushButton("+")
-        self.add_frame_button.setFixedSize(QSize(25, 25))
-        # self.add_frame_button.clicked.connect(self.add_new_frame)
+        self.add_frame_button = QPushButton("separate")
+
+        self.add_frame_button.setFixedSize(QSize(80, 25))
+        self.add_frame_button.clicked.connect(self.addFrame)
 
         self.add_frame_button.setStyleSheet("""
             QPushButton {
@@ -318,8 +317,6 @@ class MainWindow(QMainWindow):
         self.play.setIcon(QIcon("play_btn.png"))
         self.play.setIconSize(QSize(41,40))
 
-
-
         # Qt Timer
         self.timer = QLabel("00:00:00")
         self.timer.setStyleSheet("""
@@ -347,10 +344,10 @@ class MainWindow(QMainWindow):
         self.main_layout.addWidget(self.visualizer)
         self.main_layout.addWidget(self.record_widget)
 
-        
+        # Frame Counter
         # New Frome Instance
-        
-        self.new_frame = newFrame(self.scroll_area_widget,0, self.addFrame)
+        self.frame_count = 0
+        self.new_frame = newFrame(self.scroll_area_widget,0, self.frame_counter)
         self.active_frame = self.new_frame
         self.new_frame.setActiveFrame(self.active_frame)
         
@@ -360,12 +357,15 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
         self.new_frame.text_place_holder.setFocus()
 
+
+
         # Flags 
         self.start_pause = True
         self.playback_start_pause = True
         self.doesFolderExist = True
         self.does_recording_started = False
         self.isTitleCheck = False
+        self.isTitleChanged = False
 
 
     def DirChecker(self, folder_name):
@@ -403,8 +403,11 @@ class MainWindow(QMainWindow):
     def keyPressEvent(self, event: QKeyEvent) -> None:
         try:
             if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
-                
-              self.addFrame()
+              
+                if self.frame_count > 1:
+                    self.add_frame_button.setEnabled(False)
+                else:
+                    self.addFrame()
             else:
                 super().keyPressEvent(event)
         except:
@@ -412,6 +415,7 @@ class MainWindow(QMainWindow):
             
         # Dummy Event
     def addFrame(self):
+
         try:
             if len(self.new_frame.text_place_holder.toPlainText().splitlines()) > 1:
                         
@@ -419,7 +423,7 @@ class MainWindow(QMainWindow):
                     setFrameText = self.new_frame.text_place_holder.toPlainText().splitlines()[add_frame]
                     
                     # create new frame and add to scroll area
-                    newFrame_instance = newFrame(self.scroll_area_widget, add_frame, None)
+                    newFrame_instance = newFrame(self.scroll_area_widget, add_frame, self.frame_counter)
                     newFrame_instance.setActiveFrame(self.active_frame)
                     newFrame_instance.setFrameText(setFrameText)
                     
@@ -448,6 +452,14 @@ class MainWindow(QMainWindow):
             else:
                 print("No frame selected")
 
+    def frame_counter(self, i):
+        self.frame_count += i
+        if self.frame_count > 1:
+            self.add_frame_button.setEnabled(False)
+        else:
+            self.add_frame_button.setEnabled(True)
+        return self.frame_count
+
     # Loop throught all the Frame 
     def activeFrameSelector(self):
         for i in range(self.scroll_area_layout.count()):
@@ -464,9 +476,9 @@ class MainWindow(QMainWindow):
             #     # print("No Active Frame")
 
     def start_recording(self):
-            file = self.recording_name()
+        file = self.recording_name()
                 
-            self.audio_handler.start_recording(self.folder_name,f"{file}.wav")
+        self.audio_handler.start_recording(self.folder_name,f"{file}.wav")
   
             
             # print(self.start_pause) Dumm
@@ -592,24 +604,26 @@ class MainWindow(QMainWindow):
         self.doesFolderExist == True
         self.title_string = self.edit_title.text()
         self.title.setText(self.title_string)
-        if self.DirChecker(self.title_string) == True:
+        if self.DirChecker(self.title_string) == True and self.isTitleChanged == False:
             title = "File Already Exist"
             message = "Try another title"
             Modal(self,title, message)
             self.edit_title.focusInEvent = self.finish_editing_title 
         else:
             self.doesFolderExist = True
-            self.does_recording_started = True
             self.isTitleCheck = True
+            self.isTitleChanged = True
 
 class newFrame(QFrame):
-    def __init__(self, scroll_area, count, func):
+    def __init__(self, scroll_area, count, frame_count):
         super().__init__()
 
         self.sequence = count
+        self.frame_count = frame_count
+        self.frame_count(1)
         self.active_frame_selected = None
         self.for_scroll_counter = scroll_area
-        self.addFrame_byText = func
+
 
         self.isActive = False
 
@@ -629,7 +643,6 @@ class newFrame(QFrame):
         self.setGraphicsEffect(shadow)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setStyleSheet("""
-        
         QFrame {
             border: none;
             border-radius: 10px;
@@ -730,6 +743,9 @@ class newFrame(QFrame):
         def delete_frame(frame):
 
             frame.deleteLater()
+            x = self.frame_count(-1)
+            print(x)
+            
 
     def clearText(self):
         self.text_place_holder.clear()
@@ -754,18 +770,17 @@ class newFrame(QFrame):
             """)
             
             
-    def onClick(self, event):
+    def onClick(self,event):
         if event.button() == Qt.LeftButton:
-            
             # scroll area frame counter function to revert the frame to previus state
             self.scroll_area_frame_counter(self.for_scroll_counter)
-            try:
-                self.addFrame_byText()
-            except:
-                pass
+            
             self.isActive = True
             self.setStyleSheet("""
-            background-color: red;
+            
+               background-color: red;
+            
+            
             """)
             
         super().mousePressEvent(event)
