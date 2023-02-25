@@ -42,10 +42,21 @@ class MainWindow(QMainWindow):
         self.central_widget = QWidget()
         self.main_layout = QVBoxLayout(self.central_widget)
 
-        # tile Widget
+        # title Widget
+        self.title_string = "Untitle-f"
         self.title = QLabel()
-        self.title.setText('Title')
+        self.title.setText(self.title_string)
+        self.edit_title = QLineEdit(self.title_string)
+        self.edit_title.setHidden(True)
+        
         self.title.setStyleSheet("""
+        QLabel {
+            font-size: 18px;
+            font-weight: 350;
+            letter-spacing: 2px;
+        }
+        """)
+        self.edit_title.setStyleSheet("""
         font-size: 18px;
         font-weight: 350;
         letter-spacing: 2px;
@@ -56,11 +67,16 @@ class MainWindow(QMainWindow):
         self.title_and_button = QWidget()
         self.title_and_button_layout = QHBoxLayout(self.title_and_button)
         self.title_and_button_layout.addWidget(self.title)
+        self.title_and_button_layout.addWidget(self.edit_title)
         
+        # Editable title click events
+        # self.title.mouseMoveEvent = self.start_editing_title
 
         # Buttons
         self.buttons_widget = QWidget()
         self.button_layout = QHBoxLayout(self.buttons_widget)
+        self.title.mousePressEvent = self.start_editing_title
+        self.buttons_widget.mousePressEvent = self.start_editing_title
 
         self.save_btn = QPushButton("save")
         self.import_btn = QPushButton("import")
@@ -334,7 +350,7 @@ class MainWindow(QMainWindow):
         
         # New Frome Instance
         
-        self.new_frame = newFrame(self.scroll_area_widget,0)
+        self.new_frame = newFrame(self.scroll_area_widget,0, self.addFrame)
         self.active_frame = self.new_frame
         self.new_frame.setActiveFrame(self.active_frame)
         
@@ -348,14 +364,18 @@ class MainWindow(QMainWindow):
         self.start_pause = True
         self.playback_start_pause = True
         self.doesFolderExist = True
+        self.does_recording_started = False
 
 
 
     def folderCreator(self):
         # Create a Folder For storing the Recording
         self.folder_name = self.title.text()
-        if not os.path.exists(self.folder_name):
+        if not os.path.exists(self.folder_name) and self.does_recording_started == False:
             os.mkdir(self.folder_name)
+            self.does_recording_started = True
+        elif os.path.exists(self.folder_name) == True and self.does_recording_started == True:
+            pass
         else:
             self.doesFolderExist = False
             title = "Folder Already Exist"
@@ -372,30 +392,34 @@ class MainWindow(QMainWindow):
         return seperated
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
-            
-            if len(self.new_frame.text_place_holder.toPlainText().splitlines()) > 1:
+        try:
+            if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
                 
+              self.addFrame()
+            else:
+                super().keyPressEvent(event)
+        except:
+            pass
+            
+        # Dummy Event
+    def addFrame(self):
+        try:
+            if len(self.new_frame.text_place_holder.toPlainText().splitlines()) > 1:
+                        
                 for add_frame in range(1,len(self.new_frame.text_place_holder.toPlainText().splitlines())):
                     setFrameText = self.new_frame.text_place_holder.toPlainText().splitlines()[add_frame]
                     
                     # create new frame and add to scroll area
-                    newFrame_instance = newFrame(self.scroll_area_widget, add_frame)
+                    newFrame_instance = newFrame(self.scroll_area_widget, add_frame, None)
                     newFrame_instance.setActiveFrame(self.active_frame)
                     newFrame_instance.setFrameText(setFrameText)
                     
-                    
-
                     self.scroll_area_layout.addWidget(newFrame_instance)
                     print(newFrame_instance.sequence)
-                    
+                            
             self.new_frame.text_place_holder.setText(self.new_frame.text_place_holder.toPlainText().splitlines()[0])  
-
-                
-        else:
-            super().keyPressEvent(event)
-        
-        # Dummy Event
+        except:
+            pass
 
     # Select Frame
     def recording_name(self):
@@ -488,7 +512,6 @@ class MainWindow(QMainWindow):
             print("Record Does not exist")
 
     def start_recording_worker(self):
-
         self.folderCreator()
         if self.start_pause == True and self.doesFolderExist == True:
             self.record.setStyleSheet("""
@@ -545,14 +568,29 @@ class MainWindow(QMainWindow):
         else:
             pass
 
+    def start_editing_title(self, event):
+        self.title.setHidden(True)
+        self.edit_title.setHidden(False)
+        self.edit_title.setFocus(True)
+        self.edit_title.selectAll()
+        # self.edit_title.editingFinished.connect(self.finish_editing_title)
+        self.edit_title.focusOutEvent = self.finish_editing_title
+
+    
+    def finish_editing_title(self, event):
+        self.title.setHidden(False)
+        self.edit_title.setHidden(True)
+        self.title_string = self.edit_title.text()
+        self.title.setText(self.title_string)
 
 class newFrame(QFrame):
-    def __init__(self, scroll_area, count):
+    def __init__(self, scroll_area, count, func):
         super().__init__()
 
         self.sequence = count
         self.active_frame_selected = None
         self.for_scroll_counter = scroll_area
+        self.addFrame_byText = func
 
         self.isActive = False
 
@@ -699,10 +737,11 @@ class newFrame(QFrame):
             
     def onClick(self, event):
         if event.button() == Qt.LeftButton:
+
             
             # scroll area frame counter function to revert the frame to previus state
             self.scroll_area_frame_counter(self.for_scroll_counter)
-        
+            self.addFrame_byText()
             self.isActive = True
             self.setStyleSheet("""
             background-color: red;
@@ -712,6 +751,9 @@ class newFrame(QFrame):
 
     def mousePressEvent(self, event):
         self.onClick(event)
+    
+   
+
 
 
 
