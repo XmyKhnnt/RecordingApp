@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import (QApplication, QDialog, QFrame,
                              QLineEdit, QMainWindow, QPushButton, QScrollArea,
                              QSizePolicy, QTextEdit, QVBoxLayout, QWidget)
 
+from timer import timer_class
 from microphone import AudioHandler
 
 
@@ -349,6 +350,7 @@ class MainWindow(QMainWindow):
         self.frame_count = 0
         self.new_frame = newFrame(self.scroll_area_widget,0, self.frame_counter)
         self.active_frame = self.new_frame
+        
         self.new_frame.setActiveFrame(self.active_frame)
         
         self.scroll_area_layout.addWidget(self.new_frame)
@@ -366,6 +368,21 @@ class MainWindow(QMainWindow):
         self.does_recording_started = False
         self.isTitleCheck = False
         self.isTitleChanged = False
+
+    def activeClassTimerStart(self, label):
+        active = self.activeFrameSelector()
+        self.timer_ca = timer_class(active.timer)
+        print(type(active.timer))
+        self.timer_ca.startTimer()
+
+    def activeClassTimerStop(self):
+        self.timer_ca.stop()
+        self.start_worker.quit()
+
+    def timer(self, label):
+        self.timer = timer_class(label)
+        pass
+
 
 
     def DirChecker(self, folder_name):
@@ -477,9 +494,8 @@ class MainWindow(QMainWindow):
 
     def start_recording(self):
         file = self.recording_name()
-                
         self.audio_handler.start_recording(self.folder_name,f"{file}.wav")
-  
+        
             
             # print(self.start_pause) Dumm
             
@@ -516,7 +532,6 @@ class MainWindow(QMainWindow):
 
         try:
             if self.playback_start_pause == True:
-
                 self.play.setIcon(QIcon("pause-btn.png"))
                 self.playback_start_pause = False
                 self.pause.setEnabled(False)
@@ -535,6 +550,9 @@ class MainWindow(QMainWindow):
     def start_recording_worker(self):
         self.folderCreator()
         if self.start_pause == True and self.doesFolderExist == True:
+            self.activeClassTimerStart(self.active_frame.timer)
+            print(self.active_frame.sequence)
+            print(self.active_frame.timer.text())
             self.record.setStyleSheet("""
             QPushButton {
                 background-color: #b7b7b7; 
@@ -561,7 +579,9 @@ class MainWindow(QMainWindow):
             self.start_worker.start()
 
 
+
         elif self.start_pause == False:
+
             self.record.setStyleSheet("""
             QPushButton {
                 background-color: red; 
@@ -584,6 +604,7 @@ class MainWindow(QMainWindow):
             self.audio_handler.stop_recording()
             self.start_pause = True
             self.start_worker.quit()
+            self.activeClassTimerStop()
             self.play.setEnabled(True)
             self.pause.setEnabled(True)
         else:
@@ -647,6 +668,7 @@ class newFrame(QFrame):
             border: none;
             border-radius: 10px;
             background-color: white;
+            
         }
         QFrame:hover {
             border: 1px solid gray;
@@ -672,7 +694,6 @@ class newFrame(QFrame):
             """)
             self.frame_btn.clicked.connect(self.clearText)
         else:
-
             self.frame_btn = QPushButton("X")
             self.frame_btn.setStyleSheet("""
             QPushButton {
@@ -760,29 +781,55 @@ class newFrame(QFrame):
     # Added onClick Event
     # Loop throu all the list in the Scroll Area and set isActive status to False
     def scroll_area_frame_counter(self, frame):
-       for i in range(frame.layout().count()):
-        widget = frame.layout().itemAt(i).widget()
 
-        if isinstance(widget, newFrame):
-            widget.isActive = False
-            widget.setStyleSheet("""
-            background-color: white;
-            """)
-            
+        for i in range(frame.layout().count()):
+            widget = frame.layout().itemAt(i).widget()
+
+            if isinstance(widget, newFrame):
+                inActiveshadow = QGraphicsDropShadowEffect()
+                inActiveshadow.setBlurRadius(15)
+                inActiveshadow.setXOffset(0)
+                inActiveshadow.setYOffset(0)
+                inActiveshadow.setColor(QColor(0, 0, 0, 60))
+                widget.isActive = False
+                widget.setStyleSheet("""
+                QFrame {
+                    border: none;
+                    border-radius: 10px;
+                    background-color: white;
+                    
+                }
+                QFrame:hover {
+                    border: 1px solid gray;
+                }
+                """)
+                widget.setGraphicsEffect(inActiveshadow)
+                
             
     def onClick(self,event):
+        
         if event.button() == Qt.LeftButton:
             # scroll area frame counter function to revert the frame to previus state
             self.scroll_area_frame_counter(self.for_scroll_counter)
-            
+            active_shadow = QGraphicsDropShadowEffect()
+            active_shadow.setBlurRadius(45)
+            active_shadow.setXOffset(0)
+            active_shadow.setYOffset(0)
+            active_shadow.setColor(QColor(255, 0, 128, 100))
             self.isActive = True
             self.setStyleSheet("""
-            
-               background-color: red;
-            
-            
+            QFrame {
+                border: none;
+                border-radius: 10px;
+                background-color: white;
+                
+            }
+            QFrame:hover {
+                border: 1px solid #ff6eb7;
+            }
             """)
-            
+            self.setGraphicsEffect(active_shadow)
+ 
         super().mousePressEvent(event)
 
     def mousePressEvent(self, event):
