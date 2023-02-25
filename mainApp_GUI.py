@@ -9,7 +9,7 @@ from PyQt5.QtCore import QSize, Qt, QTimer, QThread, pyqtSignal
 from PyQt5.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,QLineEdit,
                              QMainWindow,  QPushButton, QScrollArea,
                              QVBoxLayout, QWidget, QGraphicsDropShadowEffect, 
-                             QTextEdit, QSizePolicy)
+                             QTextEdit, QSizePolicy, QDialog)
                              
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -67,7 +67,7 @@ class MainWindow(QMainWindow):
         self.export_btn = QPushButton("export")
 
         # Create Folder For storing recording
-        self.folderCreator()
+        
 
         # Set Shadow to buttons
         ## Bug for for adding shadow
@@ -344,9 +344,11 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
         self.new_frame.text_place_holder.setFocus()
 
-       
+        # Flags 
         self.start_pause = True
         self.playback_start_pause = True
+        self.doesFolderExist = True
+
 
 
     def folderCreator(self):
@@ -355,7 +357,13 @@ class MainWindow(QMainWindow):
         if not os.path.exists(self.folder_name):
             os.mkdir(self.folder_name)
         else:
-            pass
+            self.doesFolderExist = False
+            title = "Folder Already Exist"
+            message = "Please change the dir name"
+            self.displayModal(title, message)
+
+    def displayModal(self, title, message):
+        Modal(self,title,message)
 
     def seperatorSentence(self):
         seperated = " ".join(self.new_frame.text_place_holder.toPlainText().split(".")[1:])
@@ -391,8 +399,8 @@ class MainWindow(QMainWindow):
 
     # Select Frame
     def recording_name(self):
-        active_frame = self.activeFrameSelector()
-        filename = f'frame_{active_frame.sequence}'
+        self.activeFrameSelector()
+        filename = f'frame_{self.active_frame.sequence}'
         return filename
 
     def frameSelector(self, frame_sequence_no):
@@ -424,7 +432,9 @@ class MainWindow(QMainWindow):
 
     def start_recording(self):
             file = self.recording_name()
+                
             self.audio_handler.start_recording(self.folder_name,f"{file}.wav")
+  
             
             # print(self.start_pause) Dumm
             
@@ -478,7 +488,9 @@ class MainWindow(QMainWindow):
             print("Record Does not exist")
 
     def start_recording_worker(self):
-        if self.start_pause == True:
+
+        self.folderCreator()
+        if self.start_pause == True and self.doesFolderExist == True:
             self.record.setStyleSheet("""
             QPushButton {
                 background-color: #b7b7b7; 
@@ -716,7 +728,23 @@ class Worker(QThread):
         self.finished.emit()
 
         
+class Modal(QDialog):
 
+    def __init__(self,parent=None,title="empy modal", message="empty modal"):
+        super().__init__(parent)
+        self.title = title
+        self.message = message
+        self.setWindowTitle(self.title)
+        self.setModal(True)
+
+        self.layout = QVBoxLayout()
+        self.label = QLabel(self.message)
+        self.layout.addWidget(self.label)
+        self.setLayout(self.layout)
+
+        self.setMinimumSize(QSize(350, 150))
+
+        self.exec_()
 
 
 if __name__ == "__main__":
