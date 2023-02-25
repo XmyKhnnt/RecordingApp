@@ -367,6 +367,12 @@ class MainWindow(QMainWindow):
         self.does_recording_started = False
 
 
+    def DirChecker(self, folder_name):
+        if not os.path.exists(folder_name):
+            return False
+        else:
+            return True
+        
 
     def folderCreator(self):
         # Create a Folder For storing the Recording
@@ -374,13 +380,15 @@ class MainWindow(QMainWindow):
         if not os.path.exists(self.folder_name) and self.does_recording_started == False:
             os.mkdir(self.folder_name)
             self.does_recording_started = True
-        elif os.path.exists(self.folder_name) == True and self.does_recording_started == True:
-            pass
-        else:
+        elif os.path.exists(self.folder_name) == True and self.does_recording_started == False:
             self.doesFolderExist = False
             title = "Folder Already Exist"
             message = "Please change the dir name"
             self.displayModal(title, message)
+        else:
+            pass
+           
+            
 
     def displayModal(self, title, message):
         Modal(self,title,message)
@@ -514,6 +522,7 @@ class MainWindow(QMainWindow):
     def start_recording_worker(self):
         self.folderCreator()
         if self.start_pause == True and self.doesFolderExist == True:
+
             self.record.setStyleSheet("""
             QPushButton {
                 background-color: #b7b7b7; 
@@ -566,22 +575,31 @@ class MainWindow(QMainWindow):
             self.play.setEnabled(True)
             self.pause.setEnabled(True)
         else:
-            pass
+            print("Naa ra sa condition and problema")
 
     def start_editing_title(self, event):
         self.title.setHidden(True)
         self.edit_title.setHidden(False)
         self.edit_title.setFocus(True)
         self.edit_title.selectAll()
+        self.doesFolderExist == True
         # self.edit_title.editingFinished.connect(self.finish_editing_title)
         self.edit_title.focusOutEvent = self.finish_editing_title
-
     
     def finish_editing_title(self, event):
         self.title.setHidden(False)
         self.edit_title.setHidden(True)
+        self.doesFolderExist == True
         self.title_string = self.edit_title.text()
         self.title.setText(self.title_string)
+        if self.DirChecker(self.title_string) == True:
+            title = "File Already Exist"
+            message = "Try another title"
+            Modal(self,title, message)
+            self.edit_title.focusInEvent = self.finish_editing_title 
+        else:
+            self.doesFolderExist == True
+            self.does_recording_started == True
 
 class newFrame(QFrame):
     def __init__(self, scroll_area, count, func):
