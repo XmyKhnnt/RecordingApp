@@ -319,11 +319,11 @@ class MainWindow(QMainWindow):
         self.play.setIconSize(QSize(41,40))
 
         # Qt Timer
-        self.timer = QLabel("00:00:00")
-        self.timer.setStyleSheet("""
+        self.main_timer_label = QLabel("00:00:00")
+        self.main_timer_label.setStyleSheet("""
             font-size: 16pt;
         """)
-        self.timer.setAlignment(Qt.AlignCenter)
+        self.main_timer_label.setAlignment(Qt.AlignCenter)
 
         self.record_widget_layout.addWidget(self.visualizer)
 
@@ -336,7 +336,7 @@ class MainWindow(QMainWindow):
         self.recording_buttons_layout.addWidget(self.record)
         self.recording_buttons_layout.addWidget(self.play)
 
-        self.record_widget_layout.addWidget(self.timer)
+        self.record_widget_layout.addWidget(self.main_timer_label)
         self.record_widget_layout.addWidget(self.recording_buttons_widget)
 
         self.record_widget_layout.setAlignment(Qt.AlignCenter)
@@ -350,7 +350,7 @@ class MainWindow(QMainWindow):
         self.frame_count = 0
         self.new_frame = newFrame(self.scroll_area_widget,0, self.frame_counter)
         self.active_frame = self.new_frame
-        
+        self.new_frame.isActive = True
         self.new_frame.setActiveFrame(self.active_frame)
         
         self.scroll_area_layout.addWidget(self.new_frame)
@@ -368,22 +368,6 @@ class MainWindow(QMainWindow):
         self.does_recording_started = False
         self.isTitleCheck = False
         self.isTitleChanged = False
-
-    def activeClassTimerStart(self, label):
-        active = self.activeFrameSelector()
-        self.timer_ca = timer_class(active.timer)
-        print(type(active.timer))
-        self.timer_ca.startTimer()
-
-    def activeClassTimerStop(self):
-        self.timer_ca.stop()
-        self.start_worker.quit()
-
-    def timer(self, label):
-        self.timer = timer_class(label)
-        pass
-
-
 
     def DirChecker(self, folder_name):
         if not os.path.exists(folder_name):
@@ -482,11 +466,8 @@ class MainWindow(QMainWindow):
         for i in range(self.scroll_area_layout.count()):
 
             item = self.scroll_area_layout.itemAt(i)
-
             active_fave = item.widget()
-
             if active_fave.isActive == True:
-
                 self.active_frame = active_fave
                 return self.active_frame
             # else:
@@ -550,7 +531,6 @@ class MainWindow(QMainWindow):
     def start_recording_worker(self):
         self.folderCreator()
         if self.start_pause == True and self.doesFolderExist == True:
-            self.activeClassTimerStart(self.active_frame.timer)
             print(self.active_frame.sequence)
             print(self.active_frame.timer.text())
             self.record.setStyleSheet("""
@@ -564,7 +544,6 @@ class MainWindow(QMainWindow):
                 }
             QPushButton:hover {
                 background-color:#a70000;
-
             }
             QPushButton:pressed {
                 background-color:#b7b7b7;
@@ -593,7 +572,6 @@ class MainWindow(QMainWindow):
                 }
             QPushButton:hover {
                 background-color:#a70000;
-
             }
             QPushButton:pressed {
                 background-color:red;
@@ -604,7 +582,6 @@ class MainWindow(QMainWindow):
             self.audio_handler.stop_recording()
             self.start_pause = True
             self.start_worker.quit()
-            self.activeClassTimerStop()
             self.play.setEnabled(True)
             self.pause.setEnabled(True)
         else:
@@ -694,6 +671,7 @@ class newFrame(QFrame):
             """)
             self.frame_btn.clicked.connect(self.clearText)
         else:
+
             self.frame_btn = QPushButton("X")
             self.frame_btn.setStyleSheet("""
             QPushButton {
@@ -807,15 +785,15 @@ class newFrame(QFrame):
                 
             
     def onClick(self,event):
-        
+        active_shadow = QGraphicsDropShadowEffect()
+        active_shadow.setBlurRadius(45)
+        active_shadow.setXOffset(0)
+        active_shadow.setYOffset(0)
+        active_shadow.setColor(QColor(255, 0, 128, 100))
         if event.button() == Qt.LeftButton:
             # scroll area frame counter function to revert the frame to previus state
             self.scroll_area_frame_counter(self.for_scroll_counter)
-            active_shadow = QGraphicsDropShadowEffect()
-            active_shadow.setBlurRadius(45)
-            active_shadow.setXOffset(0)
-            active_shadow.setYOffset(0)
-            active_shadow.setColor(QColor(255, 0, 128, 100))
+
             self.isActive = True
             self.setStyleSheet("""
             QFrame {
@@ -866,6 +844,7 @@ class Modal(QDialog):
         self.setMinimumSize(QSize(350, 150))
 
         self.exec_()
+
 
 
 if __name__ == "__main__":
