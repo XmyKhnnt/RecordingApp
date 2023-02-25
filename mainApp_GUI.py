@@ -365,6 +365,7 @@ class MainWindow(QMainWindow):
         self.playback_start_pause = True
         self.doesFolderExist = True
         self.does_recording_started = False
+        self.isTitleCheck = False
 
 
     def DirChecker(self, folder_name):
@@ -522,7 +523,6 @@ class MainWindow(QMainWindow):
     def start_recording_worker(self):
         self.folderCreator()
         if self.start_pause == True and self.doesFolderExist == True:
-
             self.record.setStyleSheet("""
             QPushButton {
                 background-color: #b7b7b7; 
@@ -598,8 +598,9 @@ class MainWindow(QMainWindow):
             Modal(self,title, message)
             self.edit_title.focusInEvent = self.finish_editing_title 
         else:
-            self.doesFolderExist == True
-            self.does_recording_started == True
+            self.doesFolderExist = True
+            self.does_recording_started = True
+            self.isTitleCheck = True
 
 class newFrame(QFrame):
     def __init__(self, scroll_area, count, func):
@@ -755,11 +756,13 @@ class newFrame(QFrame):
             
     def onClick(self, event):
         if event.button() == Qt.LeftButton:
-
             
             # scroll area frame counter function to revert the frame to previus state
             self.scroll_area_frame_counter(self.for_scroll_counter)
-            self.addFrame_byText()
+            try:
+                self.addFrame_byText()
+            except:
+                pass
             self.isActive = True
             self.setStyleSheet("""
             background-color: red;
@@ -771,10 +774,6 @@ class newFrame(QFrame):
         self.onClick(event)
     
    
-
-
-
-
 
 class Worker(QThread):
     finished = pyqtSignal()
