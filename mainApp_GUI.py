@@ -510,7 +510,7 @@ class MainWindow(QMainWindow):
 
     def play_recording(self):
         file = self.recording_name()
-        self.audio_handler.start_playback(f"{file}.wav")
+        self.audio_handler.start_playback(f"{self.folder_name}/{file}.wav")
         
     def play_recording_worker(self):
 
