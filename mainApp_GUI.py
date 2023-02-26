@@ -352,6 +352,7 @@ class MainWindow(QMainWindow):
         self.new_frame = newFrame(self.scroll_area_widget,0, self.frame_counter)
         try:
             self.new_frame.paren_timer = self.main_timer
+            self.new_frame.frame0_timer = self.frame_timer
         except:
             pass
         self.active_frame = self.new_frame
@@ -374,11 +375,6 @@ class MainWindow(QMainWindow):
         self.isTitleCheck = False
         self.isTitleChanged = False
         self.doesMainTimerStarted = False
-
-
-
-    def subtract_deleted_time_to_main_timer(self):
-        pass
 
 
     def call_frame_timer_start(self):
@@ -659,8 +655,9 @@ class MainWindow(QMainWindow):
             self.isTitleChanged = True
 
 class newFrame(QFrame):
-    def __init__(self, scroll_area, count, frame_count, main_timer=0, time=0):
+    def __init__(self, scroll_area, count, frame_count, main_timer=0, time=0, frame_timer=0):
         super().__init__()
+        self.frame0_timer = frame_timer
         self.paren_timer = main_timer
         self.time = time
         self.sequence = count
@@ -789,16 +786,27 @@ class newFrame(QFrame):
 
             frame.deleteLater()
             x = self.frame_count(-1)
-            try:
-                self.paren_timer.timeElapsed -= self.time
-                self.paren_timer.updateMainTimer()
-            except:
-                pass
+            self.subMainTime()
             print(x)
-            
+    
+    def subMainTime(self):
+        try:
+            self.paren_timer.timeElapsed -= self.time
+            self.paren_timer.updateMainTimer()
+        except:
+            pass
+
+    def active_frame_time_reset(self):
+        try:
+            self.frame0_timer.timeElapsed = 0
+            self.frame0_timer.updateMainTimer()
+        except:
+            pass
 
     def clearText(self):
         self.text_place_holder.clear()
+        self.subMainTime()
+        self.active_frame_time_reset()
 
     def setActiveFrame(self,active_frave):
         self.active_frame_selected = active_frave
