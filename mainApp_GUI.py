@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 import numpy as np
 from matplotlib.backends.backend_qt5agg import \
@@ -239,22 +240,21 @@ class MainWindow(QMainWindow):
         # Record Widget Layout Size
         self.record = QPushButton("REC")
         self.play = QPushButton()
-        self.pause = QPushButton()
+        self.redo = QPushButton()
 
         # Record Buttons States
         self.play.setEnabled(False)
-        self.pause.setEnabled(False)
+        self.redo.setEnabled(False)
 
         self.record.clicked.connect(self.start_recording_worker)
         self.play.clicked.connect(self.play_recording_worker)
-        self.pause.clicked.connect(self.pause_recording)
+        self.redo.clicked.connect(self.redo_recording)
 
         # Buttons Design PLAY/RECORD/RESTART
 
 
-        self.pause.setStyleSheet("""
+        self.redo.setStyleSheet("""
         QPushButton {
-            background-color:red; 
             Border: none; 
             border-radius: 20px;
             color: white;
@@ -309,13 +309,13 @@ class MainWindow(QMainWindow):
 
         # Set Buttons Sizes
         self.record.setFixedSize(QSize(45, 45))
-        self.pause.setFixedSize(QSize(40, 40))
+        self.redo.setFixedSize(QSize(40, 40))
         self.play.setFixedSize(QSize(45, 45))
 
 
         #Set Icons To buttons
-        self.pause.setIcon(QIcon("pause-btn.png"))
-        self.pause.setIconSize(QSize(41,40))
+        self.redo.setIcon(QIcon("reload.png"))
+        self.redo.setIconSize(QSize(41,40))
         self.play.setIcon(QIcon("play_btn.png"))
         self.play.setIconSize(QSize(41,40))
 
@@ -333,7 +333,7 @@ class MainWindow(QMainWindow):
         self.recording_buttons_layout = QHBoxLayout(self.recording_buttons_widget)
 
         
-        self.recording_buttons_layout.addWidget(self.pause)
+        self.recording_buttons_layout.addWidget(self.redo)
         self.recording_buttons_layout.addWidget(self.record)
         self.recording_buttons_layout.addWidget(self.play)
 
@@ -513,29 +513,11 @@ class MainWindow(QMainWindow):
         self.audio_handler.start_recording(self.folder_name,f"{file}.wav")
         
 
-    def pause_recording(self):
-        self.record.setStyleSheet("""
-        QPushButton {
-            background-color: red; 
-            Border: none; 
-            border-radius: 22px;
-            color: white;
-            font-size: 18px;
-            padding-bottom: 2px;
-            }
-        QPushButton:hover {
-            background-color:#a70000;
+    def redo_recording(self):
+        self.active_frame.subMainTime()
+        self.start_recording_worker()
 
-        }
-        QPushButton:pressed {
-            background-color:red;
-        }
-        """)
-        self.record.setIcon(QIcon())
-        self.record.setText("REC")
-        self.start_pause = True
-        self.audio_handler.stop_recording()
-        self.start_worker.quit()
+
 
     def play_recording(self):
         file = self.recording_name()
@@ -547,7 +529,7 @@ class MainWindow(QMainWindow):
             if self.playback_start_pause == True:
                 self.play.setIcon(QIcon("pause-btn.png"))
                 self.playback_start_pause = False
-                self.pause.setEnabled(False)
+                self.redo.setEnabled(False)
                 self.record.setEnabled(False)
                 self.play_worker = Worker(self.play_recording)
                 self.play_worker.start()
@@ -555,7 +537,7 @@ class MainWindow(QMainWindow):
                 self.audio_handler.stop_playback()
                 self.playback_start_pause = True
                 self.play_worker.quit()
-                self.pause.setEnabled(True)
+                self.redo.setEnabled(True)
                 self.record.setEnabled(True)
         except:
             print("Record Does not exist")
@@ -586,12 +568,11 @@ class MainWindow(QMainWindow):
             self.record.setText("")
             self.record.setIcon(QIcon("pause-btn.png"))
             self.record.setIconSize(QSize(32, 32))
+            self.active_frame.recording_state()
             print(self.start_pause)
             self.start_pause = False
             self.start_worker = Worker(self.start_recording)
             self.start_worker.start()
-
-
 
         elif self.start_pause == False:
 
@@ -621,7 +602,8 @@ class MainWindow(QMainWindow):
             self.start_pause = True
             self.start_worker.quit()
             self.play.setEnabled(True)
-            self.pause.setEnabled(True)
+            self.redo.setEnabled(True)
+            self.active_frame.selected_state()
             self.active_frame.time = self.frame_timer.timeElapsed
             print(f' active frame time {self.active_frame.time}')
             print(f' Frame timer elapsed time {self.frame_timer.timeElapsed}')
@@ -787,7 +769,46 @@ class newFrame(QFrame):
             frame.deleteLater()
             x = self.frame_count(-1)
             self.subMainTime()
-            print(x)
+    
+    def recording_state(self):
+        inActiveshadow = QGraphicsDropShadowEffect()
+        inActiveshadow.setBlurRadius(45)
+        inActiveshadow.setXOffset(0)
+        inActiveshadow.setYOffset(0)
+        inActiveshadow.setColor(QColor(0, 255, 69, 100))
+        self.setStyleSheet("""
+        QFrame {
+            border: none;
+            border-radius: 10px;
+            background-color: #b3ffc7;
+            opacity: 0.5;
+
+        }
+        QFrame:hover {
+            border: 1px solid #00ff45;;
+        }
+        """)
+        
+        self.setGraphicsEffect(inActiveshadow)
+    
+    def selected_state(self):
+        inActiveshadow = QGraphicsDropShadowEffect()
+        inActiveshadow.setBlurRadius(45)
+        inActiveshadow.setXOffset(0)
+        inActiveshadow.setYOffset(0)
+        inActiveshadow.setColor(QColor(255, 0, 128, 100))
+        self.setStyleSheet("""
+        QFrame {
+            border: none;
+            border-radius: 10px;
+            background-color: white;
+            
+        }
+        QFrame:hover {
+            border: 1px solid gray;
+        }
+        """)
+        self.setGraphicsEffect(inActiveshadow)
     
     def subMainTime(self):
         try:
