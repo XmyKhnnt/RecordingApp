@@ -514,6 +514,7 @@ class MainWindow(QMainWindow):
         
 
     def redo_recording(self):
+        self.start_worker.quit()
         self.active_frame.subMainTime()
         self.start_recording_worker()
 
