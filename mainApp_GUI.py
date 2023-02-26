@@ -251,6 +251,7 @@ class MainWindow(QMainWindow):
 
         # Buttons Design PLAY/RECORD/RESTART
 
+
         self.pause.setStyleSheet("""
         QPushButton {
             background-color:red; 
@@ -349,6 +350,10 @@ class MainWindow(QMainWindow):
         # New Frome Instance
         self.frame_count = 0
         self.new_frame = newFrame(self.scroll_area_widget,0, self.frame_counter)
+        try:
+            self.new_frame.paren_timer = self.main_timer
+        except:
+            pass
         self.active_frame = self.new_frame
         self.new_frame.isActive = True
         self.new_frame.setActiveFrame(self.active_frame)
@@ -368,8 +373,13 @@ class MainWindow(QMainWindow):
         self.does_recording_started = False
         self.isTitleCheck = False
         self.isTitleChanged = False
-
         self.doesMainTimerStarted = False
+
+
+
+    def subtract_deleted_time_to_main_timer(self):
+        pass
+
 
     def call_frame_timer_start(self):
         ative_frame = self.activeFrameSelector()
@@ -455,7 +465,10 @@ class MainWindow(QMainWindow):
                     newFrame_instance = newFrame(self.scroll_area_widget, add_frame, self.frame_counter)
                     newFrame_instance.setActiveFrame(self.active_frame)
                     newFrame_instance.setFrameText(setFrameText)
-                    
+                    try:
+                        newFrame_instance.paren_timer = self.main_timer
+                    except:
+                        pass
                     self.scroll_area_layout.addWidget(newFrame_instance)
                     print(newFrame_instance.sequence)
                             
@@ -498,16 +511,11 @@ class MainWindow(QMainWindow):
             if active_fave.isActive == True:
                 self.active_frame = active_fave
                 return self.active_frame
-            # else:
-            #     # print("No Active Frame")
 
     def start_recording(self):
         file = self.recording_name()
         self.audio_handler.start_recording(self.folder_name,f"{file}.wav")
         
-            
-            # print(self.start_pause) Dumm
-            
 
     def pause_recording(self):
         self.record.setStyleSheet("""
@@ -561,6 +569,7 @@ class MainWindow(QMainWindow):
         if self.start_pause == True and self.doesFolderExist == True:
             self.call_frame_timer_start()
             self.start_pause_main_timer()
+      
             self.doesMainTimerStarted = True
             self.record.setStyleSheet("""
             QPushButton {
@@ -589,8 +598,11 @@ class MainWindow(QMainWindow):
 
 
         elif self.start_pause == False:
+
             self.main_timer.stopRecording()
             self.call_frame_timer_stop()
+
+            print(self.active_frame.time)
             self.record.setStyleSheet("""
             QPushButton {
                 background-color: red; 
@@ -614,6 +626,10 @@ class MainWindow(QMainWindow):
             self.start_worker.quit()
             self.play.setEnabled(True)
             self.pause.setEnabled(True)
+            self.active_frame.time = self.frame_timer.timeElapsed
+            print(f' active frame time {self.active_frame.time}')
+            print(f' Frame timer elapsed time {self.frame_timer.timeElapsed}')
+            self.active_frame.paren_timer = self.main_timer
         else:
             print("Naa ra sa condition and problema")
 
@@ -643,15 +659,15 @@ class MainWindow(QMainWindow):
             self.isTitleChanged = True
 
 class newFrame(QFrame):
-    def __init__(self, scroll_area, count, frame_count):
+    def __init__(self, scroll_area, count, frame_count, main_timer=0, time=0):
         super().__init__()
-
+        self.paren_timer = main_timer
+        self.time = time
         self.sequence = count
         self.frame_count = frame_count
         self.frame_count(1)
         self.active_frame_selected = None
         self.for_scroll_counter = scroll_area
-
 
         self.isActive = False
 
@@ -773,6 +789,11 @@ class newFrame(QFrame):
 
             frame.deleteLater()
             x = self.frame_count(-1)
+            try:
+                self.paren_timer.timeElapsed -= self.time
+                self.paren_timer.updateMainTimer()
+            except:
+                pass
             print(x)
             
 
