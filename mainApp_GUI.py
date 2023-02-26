@@ -369,6 +369,34 @@ class MainWindow(QMainWindow):
         self.isTitleCheck = False
         self.isTitleChanged = False
 
+        self.doesMainTimerStarted = False
+
+    def call_frame_timer_start(self):
+        ative_frame = self.activeFrameSelector()
+        self.frame_timer = timer_class(ative_frame.timer)
+        self.frame_timer.startTimer()
+        
+
+    def call_frame_timer_stop(self):
+        self.frame_timer.stopRecording()
+
+    def call_main_timer_start(self, label):
+        self.main_timer = timer_class(label)
+        self.main_timer.startTimer()
+
+    
+    def start_pause_main_timer(self):
+        if self.doesMainTimerStarted == False:
+            self.call_main_timer_start(self.main_timer_label)
+            print('nag create syag new instance')
+        elif self.does_recording_started == True:
+            self.main_timer.startTimer()
+            print('ang problema naa sa resume')
+        else:
+            pass
+
+
+
     def DirChecker(self, folder_name):
         if not os.path.exists(folder_name):
             return False
@@ -531,8 +559,9 @@ class MainWindow(QMainWindow):
     def start_recording_worker(self):
         self.folderCreator()
         if self.start_pause == True and self.doesFolderExist == True:
-            print(self.active_frame.sequence)
-            print(self.active_frame.timer.text())
+            self.call_frame_timer_start()
+            self.start_pause_main_timer()
+            self.doesMainTimerStarted = True
             self.record.setStyleSheet("""
             QPushButton {
                 background-color: #b7b7b7; 
@@ -560,7 +589,8 @@ class MainWindow(QMainWindow):
 
 
         elif self.start_pause == False:
-
+            self.main_timer.stopRecording()
+            self.call_frame_timer_stop()
             self.record.setStyleSheet("""
             QPushButton {
                 background-color: red; 
