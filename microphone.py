@@ -3,7 +3,6 @@ import wave
 import time
 import os
 
-
 class AudioHandler:
     def __init__(self, channels=1, rate=44100, chunk=1024):
         self.channels = channels
@@ -68,7 +67,15 @@ class AudioHandler:
         self.recording = False
         print("Recording stopping...")
     
-    def start_playback(self, filename):
+    def load_wave_file(self, filename):
+        self.wf = wave.open(filename, 'rb')
+    
+    def start_playback(self,filename):
+        self.load_wave_file(filename)
+        if not self.wf:
+            print("No wave file loaded!")
+            return
+        
         if self.playing:
             print("Already playing!")
             return
@@ -78,7 +85,7 @@ class AudioHandler:
                                   channels=self.channels,
                                   rate=self.rate,
                                   output=True)
-        self.wf = wave.open(filename, 'rb')
+        
         print("Playback started...")
         
         data = self.wf.readframes(self.chunk)
@@ -95,29 +102,9 @@ class AudioHandler:
             return
         
         self.playing = False
-        self.stream.stop_stream()
-        self.stream.close()
-        self.stream = None
-        self.wf.close()
-        self.wf = None
-        print("Playback stopped.")
-    
-    def __del__(self):
-        self.p.terminate()
-
-if __name__ == '__main__':
-    audio_handler = AudioHandler()
-
-    # Record for 5 seconds
-    audio_handler.start_recording()
-
-    # Pause the recording for 2 seconds
-    audio_handler.pause_recording()
-    time.sleep(2)
- 
-
-    # Record for another 5 seconds
-    audio_handler.start_recording()
-
-    # Stop the recording
-    audio_handler.stop_recording()
+        
+        if self.stream:
+            self.stream.stop_stream()
+            self.stream.close()
+            self.stream = None
+        
