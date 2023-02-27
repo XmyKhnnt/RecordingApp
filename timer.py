@@ -20,7 +20,8 @@ class timer_class(QTimer):
         time = '{:02d}:{:02d}:{:02d}'.format(self.timeElapsed // 3600,
                                               (self.timeElapsed // 60) % 60,
                                               self.timeElapsed % 60)
-        self.timer_label.setText(time)      
+        self.timer_label.setText(time)  
+            
     def updateMainTimer(self):
         time = '{:02d}:{:02d}:{:02d}'.format(self.timeElapsed // 3600,
                                         (self.timeElapsed // 60) % 60,
