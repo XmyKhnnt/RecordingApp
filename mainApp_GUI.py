@@ -375,6 +375,7 @@ class MainWindow(QMainWindow):
         self.isTitleCheck = False
         self.isTitleChanged = False
         self.doesMainTimerStarted = False
+        self.doesPlaybackStarted = False
 
 
     def call_frame_timer_start(self):
@@ -514,8 +515,8 @@ class MainWindow(QMainWindow):
         
 
     def redo_recording(self):
-        self.start_worker.quit()
         self.active_frame.subMainTime()
+        self.start_worker.quit()
         self.start_recording_worker()
 
 
@@ -523,21 +524,30 @@ class MainWindow(QMainWindow):
     def play_recording(self):
         file = self.recording_name()
         self.audio_handler.start_playback(f"{self.folder_name}/{file}.wav")
-        
-    def play_recording_worker(self):
+        if self.audio_handler.playing == False:
+            self.play.setIcon(QIcon("play_btn.png"))
+            self.playback_start_pause = True
+            self.play_worker.quit()
+            print('Recording Stopped')
 
+    
+
+    def play_recording_worker(self):
         try:
             if self.playback_start_pause == True:
                 self.play.setIcon(QIcon("pause-btn.png"))
+                self.play_worker = Worker(self.play_recording)
+                self.play_worker.start()
                 self.playback_start_pause = False
                 self.redo.setEnabled(False)
                 self.record.setEnabled(False)
-                self.play_worker = Worker(self.play_recording)
-                self.play_worker.start()
+
             elif self.playback_start_pause == False:
+                print("Stop")
+                self.play.setIcon(QIcon("play_btn.png"))
                 self.audio_handler.stop_playback()
-                self.playback_start_pause = True
                 self.play_worker.quit()
+                self.playback_start_pause = True
                 self.redo.setEnabled(True)
                 self.record.setEnabled(True)
         except:
@@ -616,7 +626,6 @@ class MainWindow(QMainWindow):
         self.title.setHidden(True)
         self.edit_title.setHidden(False)
         self.edit_title.setFocus(True)
-        self.edit_title.selectAll()
         self.doesFolderExist == True
         # self.edit_title.editingFinished.connect(self.finish_editing_title)
         self.edit_title.focusOutEvent = self.finish_editing_title
@@ -766,10 +775,10 @@ class newFrame(QFrame):
 
 
         def delete_frame(frame):
-
+            self.subMainTime()
             frame.deleteLater()
             x = self.frame_count(-1)
-            self.subMainTime()
+            
     
     def recording_state(self):
         inActiveshadow = QGraphicsDropShadowEffect()
