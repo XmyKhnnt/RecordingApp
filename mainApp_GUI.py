@@ -208,7 +208,6 @@ class MainWindow(QMainWindow):
         """)
 
 
-
         self.button_layout.addStretch(1)
         self.button_layout.addWidget(self.recording_gap_combo)
         self.button_layout.addWidget(self.input_device_combo)
@@ -274,11 +273,13 @@ class MainWindow(QMainWindow):
         self.record = QPushButton("REC")
         self.play = QPushButton()
         self.redo = QPushButton()
+        self.next_buton = QPushButton("Next")
 
         # Record Buttons States
         self.play.setEnabled(False)
         self.redo.setEnabled(False)
 
+        self.next_buton.clicked.connect(self.go_to_next_adjacent_frame)
         self.record.clicked.connect(self.start_recording_worker)
         self.play.clicked.connect(self.play_recording_worker)
         self.redo.clicked.connect(self.redo_recording)
@@ -369,6 +370,7 @@ class MainWindow(QMainWindow):
         self.recording_buttons_layout.addWidget(self.redo)
         self.recording_buttons_layout.addWidget(self.record)
         self.recording_buttons_layout.addWidget(self.play)
+        self.record_widget_layout.addWidget(self.next_buton)
 
         self.record_widget_layout.addWidget(self.main_timer_label)
         self.record_widget_layout.addWidget(self.recording_buttons_widget)
@@ -407,14 +409,19 @@ class MainWindow(QMainWindow):
         self.doesMainTimerStarted = False
         self.doesPlaybackStarted = False
 
+    # def go_to_next_adjacent_frame(self):
+    #     active_frame = self.activeFrameSelector()
+    #     active_frame_seq = active_frame.sequence 
+    #     try:
+    #         self.active_frame = self.frameSelector(active_frame_seq)
+    #     except:
+    #         pass
+
 
     def call_frame_timer_start(self):
         ative_frame = self.activeFrameSelector()
         self.frame_timer = timer_class(ative_frame.timer)
         self.frame_timer.startTimer()
-
-      
-        
 
     def call_frame_timer_stop(self):
         self.frame_timer.stopRecording()
@@ -519,17 +526,14 @@ class MainWindow(QMainWindow):
         filename = f'frame_{self.active_frame.sequence}'
         return filename
 
-    def frameSelector(self, frame_sequence_no):
-        for i in range(self.scroll_area_layout.count()):
-
-            item = self.scroll_area_layout.itemAt(i)
-
-            active_fave = item.widget()
-
-            if active_fave.sequence == frame_sequence_no:
-                return self.active_frame
-            else:
-                print("No frame selected")
+    # def frameSelector(self, frame_sequence_no):
+    #     for i in range(self.scroll_area_layout.count()):
+    #         item = self.scroll_area_layout.itemAt(i)
+    #         active_fave = item.widget()
+    #         if active_fave.sequence == frame_sequence_no:
+    #             return self.active_frame
+    #         else:
+    #             print("No frame selected")
 
     def frame_counter(self, i):
         self.frame_count += i
