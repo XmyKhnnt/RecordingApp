@@ -4,7 +4,8 @@ import time
 import os
 
 class AudioHandler:
-    def __init__(self, channels=1,rate=44100, chunk=1024):
+    def __init__(self, channels=2,rate=44100, chunk=1024, audio_device = 0):
+        self.audio_device_index = audio_device
         self.channels = channels
         self.rate = rate
         self.chunk = chunk
@@ -25,7 +26,7 @@ class AudioHandler:
         self.frames = []
         self.stream = self.p.open(format=pyaudio.paInt16,
                                   channels=self.channels,
-                                  rate=self.rate,
+                                  rate=self.rate, input_device_index= self.audio_device_index,
                                   input=True,
                                   frames_per_buffer=self.chunk)
         print("Recording started...")
