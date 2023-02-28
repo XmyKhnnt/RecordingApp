@@ -350,11 +350,8 @@ class MainWindow(QMainWindow):
         # New Frome Instance
         self.frame_count = 0
         self.new_frame = newFrame(self.scroll_area_widget,0, self.frame_counter)
-        try:
-            self.new_frame.paren_timer = self.main_timer
-            self.new_frame.frame0_timer = self.frame_timer
-        except:
-            pass
+        self.new_frame.folder = self.title_string
+
         self.active_frame = self.new_frame
         self.new_frame.isActive = True
         self.new_frame.setActiveFrame(self.active_frame)
@@ -382,6 +379,8 @@ class MainWindow(QMainWindow):
         ative_frame = self.activeFrameSelector()
         self.frame_timer = timer_class(ative_frame.timer)
         self.frame_timer.startTimer()
+
+      
         
 
     def call_frame_timer_stop(self):
@@ -390,6 +389,13 @@ class MainWindow(QMainWindow):
     def call_main_timer_start(self, label):
         self.main_timer = timer_class(label)
         self.main_timer.startTimer()
+        try:
+            self.new_frame.paren_timer = self.main_timer
+            self.new_frame.frame0_timer = self.frame_timer
+        except:
+
+            print("Problema nasabb")
+            pass
 
     
     def start_pause_main_timer(self):
@@ -462,6 +468,7 @@ class MainWindow(QMainWindow):
                     newFrame_instance = newFrame(self.scroll_area_widget, add_frame, self.frame_counter)
                     newFrame_instance.setActiveFrame(self.active_frame)
                     newFrame_instance.setFrameText(setFrameText)
+                    newFrame_instance.folder = self.title_string
                     try:
                         newFrame_instance.paren_timer = self.main_timer
                     except:
@@ -515,6 +522,7 @@ class MainWindow(QMainWindow):
         
 
     def redo_recording(self):
+        self.redo.setEnabled(False)
         self.active_frame.subMainTime()
         self.start_worker.quit()
         self.start_recording_worker()
@@ -649,6 +657,7 @@ class MainWindow(QMainWindow):
 class newFrame(QFrame):
     def __init__(self, scroll_area, count, frame_count, main_timer=0, time=0, frame_timer=0):
         super().__init__()
+        self.folder = None
         self.frame0_timer = frame_timer
         self.paren_timer = main_timer
         self.time = time
@@ -775,11 +784,18 @@ class newFrame(QFrame):
 
 
         def delete_frame(frame):
+            self.del_recording(self.folder)
             self.subMainTime()
             frame.deleteLater()
             x = self.frame_count(-1)
             
-    
+    def del_recording(self, folder):
+        path = f'{folder}/frame_{self.sequence}.wav'
+        if os.path.exists(path):
+            os.remove(path)
+            print("File deleted")
+
+
     def recording_state(self):
         inActiveshadow = QGraphicsDropShadowEffect()
         inActiveshadow.setBlurRadius(45)
@@ -832,12 +848,20 @@ class newFrame(QFrame):
             self.frame0_timer.timeElapsed = 0
             self.frame0_timer.updateMainTimer()
         except:
+            print(self.frame0_timer.timeElapsed)
+            print("Problem with  self.frame0_timer.timeElapsed = 0 ")
             pass
 
     def clearText(self):
+        self.del_recording(self.folder)
+        print(f'{self.folder}/frame_{self.sequence}.wav')
         self.text_place_holder.clear()
-        self.subMainTime()
+        if not self.paren_timer.timeElapsed < self.time :
+            self.subMainTime()
+        else:
+            pass
         self.active_frame_time_reset()
+        
 
     def setActiveFrame(self,active_frave):
         self.active_frame_selected = active_frave
