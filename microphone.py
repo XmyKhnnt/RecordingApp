@@ -4,7 +4,7 @@ import time
 import os
 
 class AudioHandler:
-    def __init__(self, channels=1, rate=44100, chunk=1024):
+    def __init__(self, channels=1,rate=44100, chunk=1024):
         self.channels = channels
         self.rate = rate
         self.chunk = chunk
