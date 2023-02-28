@@ -9,7 +9,7 @@ class timer_class(QTimer):
 
     def startTimer(self) -> int:
         print("timer is runnning")
-        self.start(100)
+        self.start(1000)
 
 
     def stopRecording(self):
