@@ -13,8 +13,8 @@ from PyQt5.QtGui import (QColor, QFont, QIcon, QKeyEvent, QKeySequence,
 from PyQt5.QtWidgets import (QApplication, QDialog, QFrame,
                              QGraphicsDropShadowEffect, QHBoxLayout, QLabel,
                              QLineEdit, QMainWindow, QPushButton, QScrollArea,
-                             QSizePolicy, QTextEdit, QVBoxLayout, QWidget)
-
+                             QSizePolicy, QTextEdit, QVBoxLayout, QWidget, QComboBox)
+from pyaudio import PyAudio
 from timer import timer_class
 from microphone import AudioHandler
 
@@ -178,7 +178,40 @@ class MainWindow(QMainWindow):
          """)
 
 # ------------------------------------------------------------
+        # Pyaduio Instance
+        self.input_device = PyAudio()
+        self.input_device_count = self.input_device.get_device_count()
+        # Input Device List Combo Box
+        self.input_device_combo = QComboBox()
+        for input_device in range(self.input_device_count):
+            device_info = self.input_device.get_device_info_by_index(input_device)
+            if device_info["maxInputChannels"] > 0:
+                self.input_device_combo.addItem(device_info["name"])
+
+        # word gap Combo
+        self.recording_gap_combo = QComboBox()
+        self.recording_gap_combo.addItem("0.5")
+        self.recording_gap_combo.addItem("0.75")
+        self.recording_gap_combo.addItem("1.5")
+        self.recording_gap_combo.addItem("2")
+
+        # Design combo Boxes
+        self.input_device_combo.setStyleSheet("""
+        QComboBox{
+            height: 25px;
+        }
+        """)
+        self.recording_gap_combo.setStyleSheet("""
+        QComboBox {
+            height: 25px;
+        }
+        """)
+
+
+
         self.button_layout.addStretch(1)
+        self.button_layout.addWidget(self.recording_gap_combo)
+        self.button_layout.addWidget(self.input_device_combo)
         self.button_layout.addWidget(self.add_frame_button)
         self.button_layout.addWidget(self.import_btn)
         self.button_layout.addWidget(self.export_btn)
@@ -848,7 +881,6 @@ class newFrame(QFrame):
             self.frame0_timer.timeElapsed = 0
             self.frame0_timer.updateMainTimer()
         except:
-            print(self.frame0_timer.timeElapsed)
             print("Problem with  self.frame0_timer.timeElapsed = 0 ")
             pass
 
@@ -856,9 +888,12 @@ class newFrame(QFrame):
         self.del_recording(self.folder)
         print(f'{self.folder}/frame_{self.sequence}.wav')
         self.text_place_holder.clear()
-        if not self.paren_timer.timeElapsed < self.time :
-            self.subMainTime()
-        else:
+        try:
+            if not self.paren_timer.timeElapsed < self.time :
+                self.subMainTime()
+            else:
+                pass
+        except:
             pass
         self.active_frame_time_reset()
         
