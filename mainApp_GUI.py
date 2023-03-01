@@ -573,8 +573,9 @@ class MainWindow(QMainWindow):
             self.audio_handler.audio_device_index = self.input_device_combo.currentIndex()
             self.audio_handler.start_recording(self.folder_name,f"{file}.wav")
         except:
+        
             self.main_timer.stopRecording()
-            self.call_frame_timer_stop()
+            self.frame_timer.stopRecording()
 
             print(self.active_frame.time)
             self.record.setStyleSheet("""
@@ -601,12 +602,11 @@ class MainWindow(QMainWindow):
             self.redo.setEnabled(True)
             self.active_frame.selected_state()
             self.active_frame.time = self.frame_timer.timeElapsed
-            print(f' active frame time {self.active_frame.time}')
-            print(f' Frame timer elapsed time {self.frame_timer.timeElapsed}')
             self.active_frame.paren_timer = 0
             self.record.setFixedSize(QSize(45, 45))
             self.active_frame.active_frame_time_reset()
-            
+    
+        
     def redo_recording(self):
         self.redo.setEnabled(False)
         self.active_frame.subMainTime()
@@ -1049,6 +1049,7 @@ class Worker(QThread):
     def run(self):
         self.task_func()
         self.finished.emit()
+
 
         
 class Modal(QDialog):
