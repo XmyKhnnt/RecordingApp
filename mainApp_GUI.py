@@ -409,14 +409,23 @@ class MainWindow(QMainWindow):
         self.doesMainTimerStarted = False
         self.doesPlaybackStarted = False
 
-    # def go_to_next_adjacent_frame(self):
-    #     active_frame = self.activeFrameSelector()
-    #     active_frame_seq = active_frame.sequence 
-    #     try:
-    #         self.active_frame = self.frameSelector(active_frame_seq)
-    #     except:
-    #         pass
+    def go_to_next_adjacent_frame(self):
+        try:
+            active_frame = self.activeFrameSelector()
+            main_frome_count = self.count_number_of_frame()
+            next_frame_count = active_frame.sequence + 1
+            if  next_frame_count < main_frome_count - 1:
+                active_frame.inActiveSate()
 
+                next_frame = self.frameSelector(next_frame_count)
+                next_frame.isActive = True
+            
+                next_frame_count += 1
+                self.active_frame = next_frame
+                self.active_frame.selected_state()
+        except:
+
+            pass
 
     def call_frame_timer_start(self):
         ative_frame = self.activeFrameSelector()
@@ -526,14 +535,18 @@ class MainWindow(QMainWindow):
         filename = f'frame_{self.active_frame.sequence}'
         return filename
 
-    # def frameSelector(self, frame_sequence_no):
-    #     for i in range(self.scroll_area_layout.count()):
-    #         item = self.scroll_area_layout.itemAt(i)
-    #         active_fave = item.widget()
-    #         if active_fave.sequence == frame_sequence_no:
-    #             return self.active_frame
-    #         else:
-    #             print("No frame selected")
+    def frameSelector(self, frame_sequence_no):
+        for i in range(self.scroll_area_layout.count()):
+            item = self.scroll_area_layout.itemAt(i)
+            active_fave = item.widget()
+            if active_fave.sequence == frame_sequence_no:
+                return active_fave
+    def count_number_of_frame(self):
+        count = 0
+        for _ in range(self.scroll_area_layout.count()):
+            count += 1
+        print("Total frame count: ", count)
+        return count
 
     def frame_counter(self, i):
         self.frame_count += i
@@ -573,6 +586,8 @@ class MainWindow(QMainWindow):
             self.play.setIcon(QIcon("play_btn.png"))
             self.playback_start_pause = True
             self.play_worker.quit()
+            self.redo.setEnabled(True)
+            self.record.setEnabled(True)
             print('Recording Stopped')
 
     
@@ -734,13 +749,13 @@ class newFrame(QFrame):
         """)
 
         # Btn Layout
-        self.frame_btn = QPushButton()
+        self.frame_btn = QPushButton("clear")
         if self.sequence == 0:
-            self.frame_btn = QPushButton("r")
             self.frame_btn.setStyleSheet("""
             QPushButton {
                 background-color:blue;
                 border-radius: 10px;
+                color: white;
             }
             QPushButton:hover{
                 background-color:#ff3d3d;
@@ -758,6 +773,7 @@ class newFrame(QFrame):
             QPushButton {
                 background-color:red;
                 border-radius: 10px;
+                
             }
 
             QPushButton:hover{
@@ -773,7 +789,7 @@ class newFrame(QFrame):
 
         self.new_frame_layout.addWidget(self.frame_btn,0, Qt.AlignRight)
         
-        self.frame_btn.setFixedSize(QSize(20, 20))
+        self.frame_btn.setFixedSize(QSize(40, 20))
         self.text_place_holder = QTextEdit()
         self.text_place_holder.setPlaceholderText("Enter your text here...")
         
@@ -867,9 +883,9 @@ class newFrame(QFrame):
             background-color: white;
             
         }
-        QFrame:hover {
-            border: 1px solid gray;
-        }
+         QFrame:hover {
+                border: 1px solid #ff6eb7;
+            }
         """)
         self.setGraphicsEffect(inActiveshadow)
     
@@ -908,6 +924,7 @@ class newFrame(QFrame):
     def setFrameText(self, setFrameText):
 
         self.text_place_holder.setText(setFrameText)
+
     
     # Added onClick Event
     # Loop throu all the list in the Scroll Area and set isActive status to False
@@ -915,7 +932,6 @@ class newFrame(QFrame):
 
         for i in range(frame.layout().count()):
             widget = frame.layout().itemAt(i).widget()
-
             if isinstance(widget, newFrame):
                 inActiveshadow = QGraphicsDropShadowEffect()
                 inActiveshadow.setBlurRadius(15)
@@ -936,6 +952,25 @@ class newFrame(QFrame):
                 """)
                 widget.setGraphicsEffect(inActiveshadow)
                 
+    def inActiveSate(self):
+        inActiveshadow = QGraphicsDropShadowEffect()
+        inActiveshadow.setBlurRadius(15)
+        inActiveshadow.setXOffset(0)
+        inActiveshadow.setYOffset(0)
+        inActiveshadow.setColor(QColor(0, 0, 0, 60))
+        self.isActive = False
+        self.setStyleSheet("""
+                QFrame {
+                    border: none;
+                    border-radius: 10px;
+                    background-color: white;
+                    
+                }
+                QFrame:hover {
+                    border: 1px solid gray;
+                }
+                """)
+        self.setGraphicsEffect(inActiveshadow)
             
     def onClick(self,event):
         active_shadow = QGraphicsDropShadowEffect()
