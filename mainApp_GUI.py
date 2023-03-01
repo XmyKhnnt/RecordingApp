@@ -13,7 +13,7 @@ from PyQt5.QtGui import (QColor, QFont, QIcon, QKeyEvent, QKeySequence,
 from PyQt5.QtWidgets import (QApplication, QDialog, QFrame,
                              QGraphicsDropShadowEffect, QHBoxLayout, QLabel,
                              QLineEdit, QMainWindow, QPushButton, QScrollArea,
-                             QSizePolicy, QTextEdit, QVBoxLayout, QWidget, QComboBox)
+                             QSizePolicy, QTextEdit, QVBoxLayout, QWidget, QComboBox, QMessageBox)
 from pyaudio import PyAudio
 from timer import timer_class
 from microphone import AudioHandler
@@ -30,7 +30,7 @@ class MainWindow(QMainWindow):
         self.setStyleSheet("Background-color: White;")
         QApplication.setWindowIcon(QIcon('play_btn.png'))
         
-        self.audio_handler =AudioHandler()
+        
         # Shadows
         self.shadow = QGraphicsDropShadowEffect()
         self.shadow.setBlurRadius(10)
@@ -179,6 +179,7 @@ class MainWindow(QMainWindow):
 
 # ------------------------------------------------------------
         # Pyaduio Instance
+        self.audio_handler =AudioHandler()
         self.input_device = PyAudio()
         self.input_device_count = self.input_device.get_device_count()
         # Input Device List Combo Box
@@ -206,8 +207,7 @@ class MainWindow(QMainWindow):
             height: 25px;
         }
         """)
-
-
+            
         self.button_layout.addStretch(1)
         self.button_layout.addWidget(self.recording_gap_combo)
         self.button_layout.addWidget(self.input_device_combo)
@@ -567,10 +567,46 @@ class MainWindow(QMainWindow):
                 return self.active_frame
 
     def start_recording(self):
-        file = self.recording_name()
-        self.audio_handler.start_recording(self.folder_name,f"{file}.wav")
-        
 
+        file = self.recording_name()
+        try:
+            self.audio_handler.audio_device_index = self.input_device_combo.currentIndex()
+            self.audio_handler.start_recording(self.folder_name,f"{file}.wav")
+        except:
+            self.main_timer.stopRecording()
+            self.call_frame_timer_stop()
+
+            print(self.active_frame.time)
+            self.record.setStyleSheet("""
+            QPushButton {
+                background-color: red; 
+                Border: none; 
+                border-radius: 22px;
+                color: white;
+                font-size: 18px;
+                padding-bottom: 2px;
+                }
+            QPushButton:hover {
+                background-color:#a70000;
+            }
+            QPushButton:pressed {
+                background-color:red;
+            }
+            """)
+            self.record.setIcon(QIcon())
+            self.record.setText("REC")
+            self.audio_handler.stop_recording()
+            self.start_pause = True
+            self.play.setEnabled(True)
+            self.redo.setEnabled(True)
+            self.active_frame.selected_state()
+            self.active_frame.time = self.frame_timer.timeElapsed
+            print(f' active frame time {self.active_frame.time}')
+            print(f' Frame timer elapsed time {self.frame_timer.timeElapsed}')
+            self.active_frame.paren_timer = 0
+            self.record.setFixedSize(QSize(45, 45))
+            self.active_frame.active_frame_time_reset()
+            
     def redo_recording(self):
         self.redo.setEnabled(False)
         self.active_frame.subMainTime()
@@ -618,7 +654,7 @@ class MainWindow(QMainWindow):
         if self.start_pause == True and self.doesFolderExist == True:
             self.call_frame_timer_start()
             self.start_pause_main_timer()
-      
+    
             self.doesMainTimerStarted = True
             self.record.setStyleSheet("""
             QPushButton {
