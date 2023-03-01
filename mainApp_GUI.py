@@ -574,9 +574,10 @@ class MainWindow(QMainWindow):
             self.audio_handler.start_recording(self.folder_name,f"{file}.wav")
         except:
         
-            self.main_timer.stopRecording()
-            self.frame_timer.stopRecording()
-
+            self.main_timer.stop() #NAA DRE ANG ERROR
+            
+            self.frame_timer.stop()#  NAA DRE ANG ERROR
+           
             print(self.active_frame.time)
             self.record.setStyleSheet("""
             QPushButton {
@@ -597,6 +598,7 @@ class MainWindow(QMainWindow):
             self.record.setIcon(QIcon())
             self.record.setText("REC")
             self.audio_handler.stop_recording()
+
             self.start_pause = True
             self.play.setEnabled(True)
             self.redo.setEnabled(True)
@@ -605,6 +607,11 @@ class MainWindow(QMainWindow):
             self.active_frame.paren_timer = 0
             self.record.setFixedSize(QSize(45, 45))
             self.active_frame.active_frame_time_reset()
+          
+
+
+        
+        
     
         
     def redo_recording(self):
