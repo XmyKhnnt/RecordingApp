@@ -1,4 +1,4 @@
-import pyaudio
+import pyaudio as s
 import wave
 import time
 import os
@@ -13,22 +13,24 @@ class AudioHandler:
         self.paused = False
         self.recording = False
         self.playing = False
-        self.p = pyaudio.PyAudio()
+        self.p = s.PyAudio()
         self.stream = None
         self.wf = None
     
     def start_recording(self, path, filename):
+        print(f"{self.audio_device_index}")
+        
         if self.recording:
             print("Already recording!")
             return
         
         self.recording = True
         self.frames = []
-        self.stream = self.p.open(format=pyaudio.paInt16,
-                                  channels=self.channels,
-                                  rate=self.rate, input_device_index= self.audio_device_index,
-                                  input=True,
-                                  frames_per_buffer=self.chunk)
+        self.stream = self.p.open(format=s.paInt16,
+                                channels=self.channels,
+                                rate=self.rate, input_device_index= self.audio_device_index,
+                                input=True,
+                                frames_per_buffer=self.chunk)
         print("Recording started...")
         
         while self.recording:
@@ -44,14 +46,14 @@ class AudioHandler:
         
         self.wf = wave.open(os.path.join(path, filename), 'wb')
         self.wf.setnchannels(self.channels)
-        self.wf.setsampwidth(self.p.get_sample_size(pyaudio.paInt16))
+        self.wf.setsampwidth(self.p.get_sample_size(s.paInt16))
         self.wf.setframerate(self.rate)
         self.wf.writeframes(b''.join(self.frames))
         self.wf.close()
         self.wf = None
         
         print("Recording stopped and saved to", filename)
-    
+
     def pause_recording(self):
         self.paused = True
         print("Recording paused...")
