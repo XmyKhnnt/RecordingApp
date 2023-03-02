@@ -13,7 +13,7 @@ from PyQt5.QtGui import (QColor, QFont, QIcon, QKeyEvent, QKeySequence,
 from PyQt5.QtWidgets import (QApplication, QDialog, QFrame,
                              QGraphicsDropShadowEffect, QHBoxLayout, QLabel,
                              QLineEdit, QMainWindow, QPushButton, QScrollArea,
-                             QSizePolicy, QTextEdit, QVBoxLayout, QWidget, QComboBox, QMessageBox)
+                             QSizePolicy, QTextEdit, QVBoxLayout, QWidget, QComboBox, QMessageBox, QSpacerItem)
 from pyaudio import PyAudio
 from timer import timer_class
 from microphone import AudioHandler
@@ -195,18 +195,46 @@ class MainWindow(QMainWindow):
         self.recording_gap_combo.addItem("0.75")
         self.recording_gap_combo.addItem("1.5")
         self.recording_gap_combo.addItem("2")
-
-        # Design combo Boxes
-        self.input_device_combo.setStyleSheet("""
-        QComboBox{
-            height: 25px;
-        }
-        """)
-        self.recording_gap_combo.setStyleSheet("""
+        
+        # QCSS
+        combo_css = '''
         QComboBox {
             height: 25px;
+            outline: 0;
+            border: none;
         }
-        """)
+        QComboBox::drop-down {
+            subcontrol-origin: padding;
+            subcontrol-position: top right;
+            width: 30px;
+            background-color: white;
+        }
+        QComboBox::down-arrow {
+            image: url(drop_down.png);
+            width: 30px;
+            height: 16px;
+        }
+'''
+        # Design combo Boxes
+        combo_box_shadow = QGraphicsDropShadowEffect()
+        combo_box_shadow.setBlurRadius(10)
+        combo_box_shadow.setXOffset(0)
+        combo_box_shadow.setYOffset(0)
+        combo_box_shadow.setColor(QColor(0, 0, 0, 30))
+
+        word_box_shadow = QGraphicsDropShadowEffect()
+        word_box_shadow.setBlurRadius(10)
+        word_box_shadow.setXOffset(0)
+        word_box_shadow.setYOffset(0)
+        word_box_shadow.setColor(QColor(0, 0, 0, 30))
+
+        self.input_device_combo.setGraphicsEffect(combo_box_shadow)
+        
+        self.input_device_combo.setStyleSheet(combo_css)
+        self.recording_gap_combo.setStyleSheet(combo_css)
+
+        self.recording_gap_combo.setGraphicsEffect(word_box_shadow)
+
             
         self.button_layout.addStretch(1)
         self.button_layout.addWidget(self.recording_gap_combo)
@@ -221,11 +249,14 @@ class MainWindow(QMainWindow):
    
         # create scroll area and add to main layout
         self.scroll_area = QScrollArea()
-        self.scroll_area.setMinimumHeight(300)
+        
         # Scroll area Layout Manager
         self.scroll_area.setWidgetResizable(True)
-
-
+        scroll_barv = self.scroll_area.verticalScrollBar()
+        scroll_barv.setStyleSheet("""
+        QScrollBar:vertical {width: 10px; height: 15px;}
+        """)
+      
         self.main_layout.addWidget(self.scroll_area)
 
         # Scroll Area Layout Designs
@@ -249,7 +280,11 @@ class MainWindow(QMainWindow):
         # Visulizer Module
         # Recording Widget
         self.visualizer = QFrame()
+        self.visualizer.setMinimumHeight(250)
         self.visualizer_layout = QHBoxLayout(self.visualizer)
+        self.visualizer.setStyleSheet("""
+        background-color: green;
+        """)
         self.visualizer.setMaximumHeight(50)
 
         # Dummy Content
@@ -377,8 +412,13 @@ class MainWindow(QMainWindow):
 
         self.record_widget_layout.setAlignment(Qt.AlignCenter)
 
-
+        self.visualizer_and_record_spacer = QSpacerItem(10, 10, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        
+        self.visualizer.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.record_widget.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        
         self.main_layout.addWidget(self.visualizer)
+       
         self.main_layout.addWidget(self.record_widget)
 
         # Frame Counter
@@ -408,6 +448,8 @@ class MainWindow(QMainWindow):
         self.isTitleChanged = False
         self.doesMainTimerStarted = False
         self.doesPlaybackStarted = False
+
+        self.device_mic_error = False
 
     def go_to_next_adjacent_frame(self):
         try:
@@ -573,46 +615,9 @@ class MainWindow(QMainWindow):
             self.audio_handler.audio_device_index = self.input_device_combo.currentIndex()
             self.audio_handler.start_recording(self.folder_name,f"{file}.wav")
         except:
-        
-            self.main_timer.stop() #NAA DRE ANG ERROR
-            
-            self.frame_timer.stop()#  NAA DRE ANG ERROR
-           
-            print(self.active_frame.time)
-            self.record.setStyleSheet("""
-            QPushButton {
-                background-color: red; 
-                Border: none; 
-                border-radius: 22px;
-                color: white;
-                font-size: 18px;
-                padding-bottom: 2px;
-                }
-            QPushButton:hover {
-                background-color:#a70000;
-            }
-            QPushButton:pressed {
-                background-color:red;
-            }
-            """)
-            self.record.setIcon(QIcon())
-            self.record.setText("REC")
-            self.audio_handler.stop_recording()
+            self.device_mic_error = True
+            print("yes dri ang error")
 
-            self.start_pause = True
-            self.play.setEnabled(True)
-            self.redo.setEnabled(True)
-            self.active_frame.selected_state()
-            self.active_frame.time = self.frame_timer.timeElapsed
-            self.active_frame.paren_timer = 0
-            self.record.setFixedSize(QSize(45, 45))
-            self.active_frame.active_frame_time_reset()
-          
-
-
-        
-        
-    
         
     def redo_recording(self):
         self.redo.setEnabled(False)
@@ -656,6 +661,11 @@ class MainWindow(QMainWindow):
         except:
             print("Record Does not exist")
 
+    def stopper(self):
+        self.main_timer.stopRecording()
+        self.call_frame_timer_stop()
+        self.start_worker.quit()
+
     def start_recording_worker(self):
         self.folderCreator()
         if self.start_pause == True and self.doesFolderExist == True:
@@ -687,6 +697,14 @@ class MainWindow(QMainWindow):
             self.start_pause = False
             self.start_worker = Worker(self.start_recording)
             self.start_worker.start()
+
+            while True:
+                if self.device_mic_error == True:
+                    self.stopper()
+                    print("Ni Gana ang stoper")
+                    break
+                elif self.active_frame.time > 60:
+                    break
 
         elif self.start_pause == False:
 
@@ -835,6 +853,14 @@ class newFrame(QFrame):
         self.frame_btn.setFixedSize(QSize(40, 20))
         self.text_place_holder = QTextEdit()
         self.text_place_holder.setPlaceholderText("Enter your text here...")
+        textScrollbar = self.text_place_holder.verticalScrollBar()
+        textScrollbar.setStyleSheet("""
+        QScrollBar:vertical {
+            width: 10px;
+            height: 10px;
+        }
+            
+        """)
         
         # text_place_holder Design
         self.font = QFont()
@@ -842,6 +868,7 @@ class newFrame(QFrame):
         self.text_place_holder.setFont(self.font)
         self.text_place_holder.setFontPointSize(12)
         self.text_place_holder.setMinimumHeight(60)
+
 
         self.text_option = QTextOption()
         self.text_option.setWrapMode(QTextOption.WrapAnywhere)
@@ -880,10 +907,12 @@ class newFrame(QFrame):
 
 
         def delete_frame(frame):
+            self.active_frame_time_reset()
             self.del_recording(self.folder)
             self.subMainTime()
-            frame.deleteLater()
             x = self.frame_count(-1)
+            frame.deleteLater()
+            
             
     def del_recording(self, folder):
         path = f'{folder}/frame_{self.sequence}.wav'
