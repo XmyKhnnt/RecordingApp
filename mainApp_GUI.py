@@ -13,7 +13,7 @@ from PyQt5.QtGui import (QColor, QFont, QIcon, QKeyEvent, QKeySequence,
 from PyQt5.QtWidgets import (QApplication, QDialog, QFrame,
                              QGraphicsDropShadowEffect, QHBoxLayout, QLabel,
                              QLineEdit, QMainWindow, QPushButton, QScrollArea,
-                             QSizePolicy, QTextEdit, QVBoxLayout, QWidget, QComboBox, QMessageBox, QSpacerItem)
+                             QSizePolicy, QTextEdit, QVBoxLayout, QWidget, QComboBox, QMessageBox, QSpacerItem, QCheckBox)
 from pyaudio import PyAudio
 from timer import timer_class
 from microphone import AudioHandler
@@ -61,13 +61,14 @@ class MainWindow(QMainWindow):
         font-weight: 350;
         letter-spacing: 2px;
         """)
-        # self.main_layout.addWidget(self.title)
+        self.main_layout.addWidget(self.title)
+        self.main_layout.addWidget(self.edit_title)
 
         # Title and Button
         self.title_and_button = QWidget()
         self.title_and_button_layout = QHBoxLayout(self.title_and_button)
-        self.title_and_button_layout.addWidget(self.title)
-        self.title_and_button_layout.addWidget(self.edit_title)
+        # self.title_and_button_layout.addWidget(self.title)
+        # self.title_and_button_layout.addWidget(self.edit_title)
         
         # Editable title click events
         # self.title.mouseMoveEvent = self.start_editing_title
@@ -76,7 +77,7 @@ class MainWindow(QMainWindow):
         self.buttons_widget = QWidget()
         self.button_layout = QHBoxLayout(self.buttons_widget)
         self.title.mousePressEvent = self.start_editing_title
-        self.buttons_widget.mousePressEvent = self.start_editing_title
+       
 
         self.save_btn = QPushButton("save")
         self.import_btn = QPushButton("import")
@@ -450,6 +451,8 @@ class MainWindow(QMainWindow):
         self.doesPlaybackStarted = False
 
         self.device_mic_error = False
+        # Message box show again
+        self.message_box_popup = False
 
     def go_to_next_adjacent_frame(self):
         try:
@@ -620,11 +623,56 @@ class MainWindow(QMainWindow):
 
         
     def redo_recording(self):
-        self.redo.setEnabled(False)
-        self.active_frame.subMainTime()
-        self.start_worker.quit()
-        self.start_recording_worker()
+        if self.message_box_popup == False:
+            msbox = self.show_message_box()
 
+            if msbox == True:
+                self.redo.setEnabled(False)
+                self.active_frame.subMainTime()
+                self.start_worker.quit()
+                self.start_recording_worker()
+            else:
+                pass
+
+        elif self.message_box_popup == True:
+            self.redo.setEnabled(False)
+            self.active_frame.subMainTime()
+            self.start_worker.quit()
+            self.start_recording_worker()
+        else:
+            pass
+
+
+    def show_message_box(self):
+        # Create a message box
+        msg_box = QMessageBox()
+        msg_box.setWindowTitle("Message")
+        msg_box.setText("Do you wan't to overide the current recoring?")
+        
+        # Add a "Don't show again" checkbox to the message box
+        checkbox = QCheckBox("Don't show this message again", msg_box)
+        msg_box.setCheckBox(checkbox)
+        
+        # Add buttons to the message box
+        msg_box.addButton(QMessageBox.Ok)
+        msg_box.addButton(QMessageBox.Cancel)
+
+        # Show the message box and get the result
+        result = msg_box.exec_()
+        
+        # Check if the checkbox was checked and save its state
+        if checkbox.isChecked():
+            # Save the state to a file or a settings object
+            self.message_box_popup = True 
+        else:
+            self.message_box_popup = False
+        
+        # Process the result
+        if result == QMessageBox.Ok:
+            return True
+        elif result == QMessageBox.Cancel:
+            return False
+        
 
 
     def play_recording(self):
@@ -698,13 +746,13 @@ class MainWindow(QMainWindow):
             self.start_worker = Worker(self.start_recording)
             self.start_worker.start()
 
-            while True:
-                if self.device_mic_error == True:
-                    self.stopper()
-                    print("Ni Gana ang stoper")
-                    break
-                elif self.active_frame.time > 60:
-                    break
+            # while True:
+            #     if self.device_mic_error == True:
+            #         self.stopper()
+            #         print("Ni Gana ang stoper")
+            #         break
+            #     elif self.active_frame.time > 60:
+            #         break
 
         elif self.start_pause == False:
 
@@ -767,6 +815,8 @@ class MainWindow(QMainWindow):
             self.isTitleCheck = True
             self.isTitleChanged = True
 
+
+    
 class newFrame(QFrame):
     def __init__(self, scroll_area, count, frame_count, main_timer=0, time=0, frame_timer=0):
         super().__init__()
