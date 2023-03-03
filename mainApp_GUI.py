@@ -647,20 +647,20 @@ class MainWindow(QMainWindow):
 
     def show_message_box(self):
         # Create a message box
-        msg_box = QMessageBox()
-        msg_box.setWindowTitle("Message")
-        msg_box.setText("Do you wan't to overide the current recoring?")
+        self.redo_msg_box = QMessageBox()
+        self.redo_msg_box.setWindowTitle("Message")
+        self.redo_msg_box.setText("Do you wan't to overide the current recoring?")
         
         # Add a "Don't show again" checkbox to the message box
-        checkbox = QCheckBox("Don't show this message again", msg_box)
-        msg_box.setCheckBox(checkbox)
+        checkbox = QCheckBox("Don't show this message again",self.redo_msg_box)
+        self.redo_msg_box.setCheckBox(checkbox)
         
         # Add buttons to the message box
-        msg_box.addButton(QMessageBox.Ok)
-        msg_box.addButton(QMessageBox.Cancel)
+        self.redo_msg_box.addButton(QMessageBox.Ok)
+        self.redo_msg_box.addButton(QMessageBox.Cancel)
 
         # Show the message box and get the result
-        result = msg_box.exec_()
+        result = self.redo_msg_box.exec_()
         
         # Check if the checkbox was checked and save its state
         if checkbox.isChecked():
@@ -819,7 +819,6 @@ class MainWindow(QMainWindow):
             if self.dir_pop == False:
                 pop = self.show_message_box_title()
                 if pop == False:
-                    self.start_editing_title_call()
                     self.edit_title.focusInEvent = self.finish_editing_title 
                 else:
                     try:
@@ -845,20 +844,20 @@ class MainWindow(QMainWindow):
 
     def show_message_box_title(self):
         # Create a message box
-        msg_box = QMessageBox()
-        msg_box.setWindowTitle("Message")
-        msg_box.setText("Do you want to use the current dir and delete the content?")
+        self.tile_msg_box = QMessageBox()
+        self.tile_msg_box.setWindowTitle("Message")
+        self.tile_msg_box.setText("Do you want to use the current dir and delete the content?")
         
         # Add a "Don't show again" checkbox to the message box
-        checkbox = QCheckBox("Don't show this message again", msg_box)
-        msg_box.setCheckBox(checkbox)
+        checkbox = QCheckBox("Don't show this message again", self.tile_msg_box)
+        self.tile_msg_box.setCheckBox(checkbox)
         
         # Add buttons to the message box
-        msg_box.addButton(QMessageBox.Ok)
-        msg_box.addButton(QMessageBox.Cancel)
+        self.tile_msg_box.addButton(QMessageBox.Ok)
+        self.tile_msg_box.addButton(QMessageBox.Cancel)
 
         # Show the message box and get the result
-        result = msg_box.exec_()
+        result = self.tile_msg_box.exec_()
         
         # Check if the checkbox was checked and save its state
         if checkbox.isChecked():
@@ -872,6 +871,15 @@ class MainWindow(QMainWindow):
             return True
         elif result == QMessageBox.Cancel:
             return False
+        
+    def closeEvent(self, event):
+            # close the modal dialog if it is visible
+            if self.tile_msg_box.isVisible():
+                self.tile_msg_box.close()
+
+   
+            # call the parent's closeEvent method
+            super().closeEvent(event)
         
     
 class newFrame(QFrame):
