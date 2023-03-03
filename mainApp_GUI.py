@@ -820,15 +820,28 @@ class MainWindow(QMainWindow):
                 pop = self.show_message_box_title()
                 if pop == False:
                     self.start_editing_title_call()
-                else:
                     self.edit_title.focusInEvent = self.finish_editing_title 
-                    pass
+                else:
+                    try:
+                        self.del_files(self.title_string)
+                    except:
+                        pass
+                    
+                    
             
         else:
             self.doesFolderExist = True
             self.isTitleCheck = True
             self.isTitleChanged = True
-        
+    
+    def del_files(self, dir):
+        for file in os.scandir(dir):
+            print(file)
+            os.remove(file)
+
+
+    def del_items_in_dir(self):
+        pass
 
     def show_message_box_title(self):
         # Create a message box
