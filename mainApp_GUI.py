@@ -453,6 +453,8 @@ class MainWindow(QMainWindow):
         self.device_mic_error = False
         # Message box show again
         self.message_box_popup = False
+        #ms to current dit
+        self.dir_pop = False
 
     def go_to_next_adjacent_frame(self):
         try:
@@ -799,6 +801,14 @@ class MainWindow(QMainWindow):
         # self.edit_title.editingFinished.connect(self.finish_editing_title)
         self.edit_title.focusOutEvent = self.finish_editing_title
     
+    def start_editing_title_call(self):
+        self.title.setHidden(True)
+        self.edit_title.setHidden(False)
+        self.edit_title.setFocus(True)
+        self.doesFolderExist == True
+        # self.edit_title.editingFinished.connect(self.finish_editing_title)
+        self.edit_title.focusOutEvent = self.finish_editing_title
+    
     def finish_editing_title(self, event):
         self.title.setHidden(False)
         self.edit_title.setHidden(True)
@@ -806,16 +816,50 @@ class MainWindow(QMainWindow):
         self.title_string = self.edit_title.text()
         self.title.setText(self.title_string)
         if self.DirChecker(self.title_string) == True and self.isTitleChanged == False:
-            title = "File Already Exist"
-            message = "Try another title"
-            Modal(self,title, message)
-            self.edit_title.focusInEvent = self.finish_editing_title 
+            if self.dir_pop == False:
+                pop = self.show_message_box_title()
+                if pop == False:
+                    self.start_editing_title_call()
+                else:
+                    self.edit_title.focusInEvent = self.finish_editing_title 
+                    pass
+            
         else:
             self.doesFolderExist = True
             self.isTitleCheck = True
             self.isTitleChanged = True
+        
 
+    def show_message_box_title(self):
+        # Create a message box
+        msg_box = QMessageBox()
+        msg_box.setWindowTitle("Message")
+        msg_box.setText("Do you want to use the current dir and delete the content?")
+        
+        # Add a "Don't show again" checkbox to the message box
+        checkbox = QCheckBox("Don't show this message again", msg_box)
+        msg_box.setCheckBox(checkbox)
+        
+        # Add buttons to the message box
+        msg_box.addButton(QMessageBox.Ok)
+        msg_box.addButton(QMessageBox.Cancel)
 
+        # Show the message box and get the result
+        result = msg_box.exec_()
+        
+        # Check if the checkbox was checked and save its state
+        if checkbox.isChecked():
+            # Save the state to a file or a settings object
+            self.dir_pop = True 
+        else:
+            self.dir_pop = False
+        
+        # Process the result
+        if result == QMessageBox.Ok:
+            return True
+        elif result == QMessageBox.Cancel:
+            return False
+        
     
 class newFrame(QFrame):
     def __init__(self, scroll_area, count, frame_count, main_timer=0, time=0, frame_timer=0):
