@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import (QApplication, QDialog, QFrame,
 from pyaudio import PyAudio
 from timer import timer_class
 from microphone import AudioHandler
+from audioEditor import AudioTrimmer
 
 
 class MainWindow(QMainWindow):
@@ -115,6 +116,7 @@ class MainWindow(QMainWindow):
             }
         """)
         self.save_btn.setFixedSize(QSize(85, 25))
+        self.save_btn.clicked.connect(self.save_and_combine_files)
 
         # # import_btn 
         # self.import_btn.setStyleSheet("""
@@ -410,8 +412,6 @@ class MainWindow(QMainWindow):
         self.recording_buttons_widget = QWidget()
         self.recording_buttons_layout = QHBoxLayout(self.recording_buttons_widget)
 
-        
-        
 
         self.recording_buttons_layout.addWidget(self.redo)
         self.recording_buttons_layout.addWidget(self.record)
@@ -466,6 +466,20 @@ class MainWindow(QMainWindow):
         self.message_box_popup = False
         #ms to current dit
         self.dir_pop = False
+    def save_and_combine_files(self):
+        path = self.title_string
+        audio_trimmer = AudioTrimmer(path)
+        timer_interval = self.recording_gap_combo.currentText()
+        audio_trimmer.trim_files(float(timer_interval))
+        audio_trimmer.combine_files()
+        
+        msg_box = QMessageBox()
+        msg_box.setText("Task or process is done.")
+        msg_box.exec_()
+
+        
+        
+
 
     def go_to_next_adjacent_frame(self):
         try:
