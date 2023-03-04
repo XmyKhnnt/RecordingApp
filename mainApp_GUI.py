@@ -67,8 +67,8 @@ class MainWindow(QMainWindow):
         # Title and Button
         self.title_and_button = QWidget()
         self.title_and_button_layout = QHBoxLayout(self.title_and_button)
-        # self.title_and_button_layout.addWidget(self.title)
-        # self.title_and_button_layout.addWidget(self.edit_title)
+        self.title_and_button_layout.addWidget(self.title)
+        self.title_and_button_layout.addWidget(self.edit_title)
         
         # Editable title click events
         # self.title.mouseMoveEvent = self.start_editing_title
@@ -77,11 +77,12 @@ class MainWindow(QMainWindow):
         self.buttons_widget = QWidget()
         self.button_layout = QHBoxLayout(self.buttons_widget)
         self.title.mousePressEvent = self.start_editing_title
+        self.buttons_widget.mousePressEvent = self.start_editing_title
        
 
         self.save_btn = QPushButton("save")
-        self.import_btn = QPushButton("import")
-        self.export_btn = QPushButton("export")
+        # self.import_btn = QPushButton("import")
+        # self.export_btn = QPushButton("export")
 
         # Create Folder For storing recording
         
@@ -90,8 +91,8 @@ class MainWindow(QMainWindow):
         ## Bug for for adding shadow
         
         self.save_btn.setGraphicsEffect(self.shadow)
-        self.import_btn.setGraphicsEffect(self.shadow)
-        self.export_btn.setGraphicsEffect(self.shadow)
+        # self.import_btn.setGraphicsEffect(self.shadow)
+        # self.export_btn.setGraphicsEffect(self.shadow)
 
         # Buttons Design
         # save_btn
@@ -115,45 +116,45 @@ class MainWindow(QMainWindow):
         """)
         self.save_btn.setFixedSize(QSize(85, 25))
 
-        # import_btn 
-        self.import_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #4b4b4b; 
-                Border: none; 
-                border-radius: 12px;
-                color: white;
-                font-size: 18px;
-                padding-bottom: 2px;
-                }
-            QPushButton:hover {
-                background-color:black;
-            }
-            QPushButton:pressed {
-                background-color: #4b4b4b;
-            }
-        """)
+        # # import_btn 
+        # self.import_btn.setStyleSheet("""
+        #     QPushButton {
+        #         background-color: #4b4b4b; 
+        #         Border: none; 
+        #         border-radius: 12px;
+        #         color: white;
+        #         font-size: 18px;
+        #         padding-bottom: 2px;
+        #         }
+        #     QPushButton:hover {
+        #         background-color:black;
+        #     }
+        #     QPushButton:pressed {
+        #         background-color: #4b4b4b;
+        #     }
+        # """)
 
-        self.import_btn.setFixedSize(QSize(85, 25))
+        # self.import_btn.setFixedSize(QSize(85, 25))
 
-        # Export btn
-        self.export_btn.setStyleSheet("""
-           QPushButton {
-                background-color: #4b4b4b; 
-                Border: none; 
-                border-radius: 12px;
-                color: white;
-                font-size: 18px;
-                padding-bottom: 2px;
-                }
-            QPushButton:hover {
-                background-color:black;
-            }
-            QPushButton:pressed {
-                background-color: #4b4b4b;
-            }
-        """)
+        # # Export btn
+        # self.export_btn.setStyleSheet("""
+        #    QPushButton {
+        #         background-color: #4b4b4b; 
+        #         Border: none; 
+        #         border-radius: 12px;
+        #         color: white;
+        #         font-size: 18px;
+        #         padding-bottom: 2px;
+        #         }
+        #     QPushButton:hover {
+        #         background-color:black;
+        #     }
+        #     QPushButton:pressed {
+        #         background-color: #4b4b4b;
+        #     }
+        # """)
 
-        self.export_btn.setFixedSize(QSize(85, 25))
+        # self.export_btn.setFixedSize(QSize(85, 25))
         self.add_frame_button = QPushButton("separate")
 
         self.add_frame_button.setFixedSize(QSize(80, 25))
@@ -241,8 +242,8 @@ class MainWindow(QMainWindow):
         self.button_layout.addWidget(self.recording_gap_combo)
         self.button_layout.addWidget(self.input_device_combo)
         self.button_layout.addWidget(self.add_frame_button)
-        self.button_layout.addWidget(self.import_btn)
-        self.button_layout.addWidget(self.export_btn)
+        # self.button_layout.addWidget(self.import_btn)
+        # self.button_layout.addWidget(self.export_btn)
         self.button_layout.addWidget(self.save_btn)
 
         self.title_and_button_layout.addWidget(self.buttons_widget)
@@ -253,6 +254,7 @@ class MainWindow(QMainWindow):
         
         # Scroll area Layout Manager
         self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setMinimumHeight(300)
         scroll_barv = self.scroll_area.verticalScrollBar()
         scroll_barv.setStyleSheet("""
         QScrollBar:vertical {width: 10px; height: 15px;}
@@ -272,6 +274,7 @@ class MainWindow(QMainWindow):
         # create container widget for scroll area
         self.scroll_area_widget = QWidget()
         self.scroll_area.setWidget(self.scroll_area_widget)
+    
 
         # create layout for container widget
         self.scroll_area_layout = QVBoxLayout(self.scroll_area_widget)
@@ -281,8 +284,11 @@ class MainWindow(QMainWindow):
         # Visulizer Module
         # Recording Widget
         self.visualizer = QFrame()
-        self.visualizer.setMinimumHeight(250)
+        # self.visualizer.setMinimumHeight(0)
+
+        self.play = QPushButton()
         self.visualizer_layout = QHBoxLayout(self.visualizer)
+        self.visualizer_layout.addWidget(self.play)
         self.visualizer.setStyleSheet("""
         background-color: green;
         """)
@@ -307,13 +313,15 @@ class MainWindow(QMainWindow):
 
         # Record Widget Layout Size
         self.record = QPushButton("REC")
-        self.play = QPushButton()
+        
         self.redo = QPushButton()
         self.next_buton = QPushButton("Next")
 
         # Record Buttons States
         self.play.setEnabled(False)
         self.redo.setEnabled(False)
+
+       
 
         self.next_buton.clicked.connect(self.go_to_next_adjacent_frame)
         self.record.clicked.connect(self.start_recording_worker)
@@ -403,10 +411,13 @@ class MainWindow(QMainWindow):
         self.recording_buttons_layout = QHBoxLayout(self.recording_buttons_widget)
 
         
+        
+
         self.recording_buttons_layout.addWidget(self.redo)
         self.recording_buttons_layout.addWidget(self.record)
-        self.recording_buttons_layout.addWidget(self.play)
-        self.record_widget_layout.addWidget(self.next_buton)
+        self.recording_buttons_layout.addWidget(self.next_buton)
+        # self.recording_buttons_layout.addWidget(self.play)
+        # self.record_widget_layout.addWidget(self.next_buton)
 
         self.record_widget_layout.addWidget(self.main_timer_label)
         self.record_widget_layout.addWidget(self.recording_buttons_widget)
@@ -461,7 +472,7 @@ class MainWindow(QMainWindow):
             active_frame = self.activeFrameSelector()
             main_frome_count = self.count_number_of_frame()
             next_frame_count = active_frame.sequence + 1
-            if  next_frame_count < main_frome_count - 1:
+            if  next_frame_count < main_frome_count:
                 active_frame.inActiveSate()
 
                 next_frame = self.frameSelector(next_frame_count)
@@ -874,8 +885,11 @@ class MainWindow(QMainWindow):
         
     def closeEvent(self, event):
             # close the modal dialog if it is visible
-            if self.tile_msg_box.isVisible():
-                self.tile_msg_box.close()
+            try:
+                if self.tile_msg_box.isVisible():
+                    self.tile_msg_box.close()
+            except:
+                pass
 
    
             # call the parent's closeEvent method
