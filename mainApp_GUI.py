@@ -1,7 +1,10 @@
 import os
 import sys
 import time
-
+import pyaudio
+import pyaudio
+import numpy as np
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
 from matplotlib.backends.backend_qt5agg import \
     FigureCanvasQTAgg as FigureCanvas
@@ -61,6 +64,7 @@ class MainWindow(QMainWindow):
         font-size: 18px;
         font-weight: 350;
         letter-spacing: 2px;
+        border: none;
         """)
         self.main_layout.addWidget(self.title)
         self.main_layout.addWidget(self.edit_title)
@@ -118,45 +122,6 @@ class MainWindow(QMainWindow):
         self.save_btn.setFixedSize(QSize(85, 25))
         self.save_btn.clicked.connect(self.save_and_combine_files)
 
-        # # import_btn 
-        # self.import_btn.setStyleSheet("""
-        #     QPushButton {
-        #         background-color: #4b4b4b; 
-        #         Border: none; 
-        #         border-radius: 12px;
-        #         color: white;
-        #         font-size: 18px;
-        #         padding-bottom: 2px;
-        #         }
-        #     QPushButton:hover {
-        #         background-color:black;
-        #     }
-        #     QPushButton:pressed {
-        #         background-color: #4b4b4b;
-        #     }
-        # """)
-
-        # self.import_btn.setFixedSize(QSize(85, 25))
-
-        # # Export btn
-        # self.export_btn.setStyleSheet("""
-        #    QPushButton {
-        #         background-color: #4b4b4b; 
-        #         Border: none; 
-        #         border-radius: 12px;
-        #         color: white;
-        #         font-size: 18px;
-        #         padding-bottom: 2px;
-        #         }
-        #     QPushButton:hover {
-        #         background-color:black;
-        #     }
-        #     QPushButton:pressed {
-        #         background-color: #4b4b4b;
-        #     }
-        # """)
-
-        # self.export_btn.setFixedSize(QSize(85, 25))
         self.add_frame_button = QPushButton("separate")
 
         self.add_frame_button.setFixedSize(QSize(80, 25))
@@ -294,21 +259,42 @@ class MainWindow(QMainWindow):
         self.visualizer.setStyleSheet("""
         background-color: green;
         """)
-        self.visualizer.setMaximumHeight(50)
 
-        # Dummy Content
-        self.visualizer.setMinimumHeight(150) 
 
-        # Create a Matplotlib Figure object
-        self.fig = Figure(figsize=(5, 4), dpi=100)
-        self.axes = self.fig.add_subplot(111)
 
-        # Create a Matplotlib canvas and add it to the main window
+        """
+        Visualizer
+        """
+        self.pa = pyaudio.PyAudio()
+        self.chunk_size = 1024
+        self.sample_format = pyaudio.paInt16
+        self.channels = 1
+        self.rate = 44100
+        self.stream = self.pa.open(format=self.sample_format,
+                                    channels=self.channels,
+                                    rate=self.rate,
+                                    input=True,
+                                    frames_per_buffer=self.chunk_size)
+  
+        self.waveform_data = None
+        self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
-        self.canvas.setParent(self.visualizer)  
+        self.ax = self.fig.add_subplot(111)
+        self.ax.set_ylim(-32768, 32767)
+        self.ax.set_xlim(0, self.chunk_size)
+        self.line, = self.ax.plot([], [], '-')
+
+
 
         self.visualizer_layout.addWidget(self.canvas)
-
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update_plot)
+        self.stream = self.pa.open(format=self.sample_format,
+                                   channels=self.channels,
+                                   rate=self.rate,
+                                   input=True,
+                                   frames_per_buffer=self.chunk_size)
+        self.timer.start(50)
         self.record_widget = QWidget()
         self.record_widget_layout = QVBoxLayout(self.record_widget)
         
@@ -466,6 +452,11 @@ class MainWindow(QMainWindow):
         self.message_box_popup = False
         #ms to current dit
         self.dir_pop = False
+    def update_plot(self):
+        data = self.stream.read(self.chunk_size, exception_on_overflow=False)
+        data_int = np.frombuffer(data, dtype=np.int16)
+        self.line.set_data(np.arange(len(data_int)), data_int)
+        self.canvas.draw()
     def save_and_combine_files(self):
         path = self.title_string
         audio_trimmer = AudioTrimmer(path)
@@ -478,8 +469,7 @@ class MainWindow(QMainWindow):
         msg_box.exec_()
 
         
-        
-
+            
 
     def go_to_next_adjacent_frame(self):
         try:
@@ -742,6 +732,7 @@ class MainWindow(QMainWindow):
         self.start_worker.quit()
 
     def start_recording_worker(self):
+
         self.folderCreator()
         if self.start_pause == True and self.doesFolderExist == True:
             self.call_frame_timer_start()
@@ -1055,8 +1046,7 @@ class newFrame(QFrame):
             self.subMainTime()
             x = self.frame_count(-1)
             frame.deleteLater()
-            
-            
+
     def del_recording(self, folder):
         path = f'{folder}/frame_{self.sequence}.wav'
         if os.path.exists(path):
