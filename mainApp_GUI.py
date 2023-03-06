@@ -1,7 +1,10 @@
 import os
 import sys
 import time
-
+import pyaudio
+import pyaudio
+import numpy as np
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
 from matplotlib.backends.backend_qt5agg import \
     FigureCanvasQTAgg as FigureCanvas
@@ -61,6 +64,7 @@ class MainWindow(QMainWindow):
         font-size: 18px;
         font-weight: 350;
         letter-spacing: 2px;
+        border: none;
         """)
         self.main_layout.addWidget(self.title)
         self.main_layout.addWidget(self.edit_title)
@@ -320,9 +324,36 @@ class MainWindow(QMainWindow):
         self.axes = self.fig.add_subplot(111)
 
         # Create a Matplotlib canvas and add it to the main window
-        self.canvas = FigureCanvas(self.fig)
-        self.canvas.setParent(self.visualizer)  
+        """
+        Visualizer
+        """
+        self.pa = pyaudio.PyAudio()
+        self.chunk_size = 1024
+        self.sample_format = pyaudio.paInt16
+        self.channels = 1
+        self.rate = 44100
+        self.stream = self.pa.open(format=self.sample_format,
+                                    channels=self.channels,
+                                    rate=self.rate,
+                                    input=True,
+                                    frames_per_buffer=self.chunk_size)
 
+        self.waveform_data = None
+        self.fig = Figure()
+        self.canvas = FigureCanvas(self.fig)
+        self.ax = self.fig.add_subplot(111)
+        self.ax.set_ylim(-32768, 32767)
+        self.ax.set_xlim(0, self.chunk_size)
+        self.line, = self.ax.plot([], [], '-')
+        self.visualizer_layout.addWidget(self.canvas)
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update_plot)
+        self.stream = self.pa.open(format=self.sample_format,
+                                   channels=self.channels,
+                                   rate=self.rate,
+                                   input=True,
+                                   frames_per_buffer=self.chunk_size)
+        self.timer.start(50)
         self.visualizer_layout.addWidget(self.canvas)
 
         self.record_widget = QWidget()
@@ -482,6 +513,11 @@ class MainWindow(QMainWindow):
         self.message_box_popup = False
         #ms to current dit
         self.dir_pop = False
+    def update_plot(self):
+        data = self.stream.read(self.chunk_size, exception_on_overflow=False)
+        data_int = np.frombuffer(data, dtype=np.int16)
+        self.line.set_data(np.arange(len(data_int)), data_int)
+        self.canvas.draw()
     def save_and_combine_files(self):
 
         path = self.title_string
