@@ -2,6 +2,7 @@ from pydub import AudioSegment
 import os
 
 class AudioTrimmer:
+
     def __init__(self, folder_path):
         self.folder_path = folder_path
         self.trimmed_files = []
@@ -14,7 +15,7 @@ class AudioTrimmer:
                 # load the audio file
                 audio = AudioSegment.from_file(os.path.join(self.folder_path, file))
                 
-                end_time_initial = len(audio) - end_time
+                end_time_initial = len(audio) - (end_time * 1000)
                 print(f"  end_time_initial {end_time_initial}")
                 print(f"len(audio) {len(audio)}")
 
@@ -29,7 +30,8 @@ class AudioTrimmer:
 
     def combine_files(self):
         if not self.trimmed_files:
-            raise ValueError("No trimmed files found.")
+            print("No trimmed files found.")
+            return
 
         # load the first audio file
         combined_audio = AudioSegment.from_file(self.trimmed_files[0])
@@ -40,7 +42,7 @@ class AudioTrimmer:
             combined_audio += audio
 
         # export the combined audio to a new file
-        self.combined_file = os.path.join(self.folder_path, "00combined_file.wav")
+        self.combined_file = os.path.join(self.folder_path, f"{self.folder_path}combined_file.wav")
         combined_audio.export(self.combined_file, format="wav")
 
 if __name__ == "__main__":
