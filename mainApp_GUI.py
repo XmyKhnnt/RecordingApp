@@ -483,9 +483,11 @@ class MainWindow(QMainWindow):
         #ms to current dit
         self.dir_pop = False
     def save_and_combine_files(self):
+
         path = self.title_string
+        print(path)
         audio_trimmer = AudioTrimmer(path)
-        timer_interval = self.recording_gap_combo.currentText()
+        timer_interval = self.recording_gap_text_input.text()
         audio_trimmer.trim_files(float(timer_interval))
         audio_trimmer.combine_files()
         
@@ -494,8 +496,7 @@ class MainWindow(QMainWindow):
         msg_box.exec_()
 
         
-        
-
+    
 
     def go_to_next_adjacent_frame(self):
         try:
