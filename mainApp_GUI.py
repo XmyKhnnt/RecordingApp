@@ -495,8 +495,6 @@ class MainWindow(QMainWindow):
         msg_box.setText("Task or process is done.")
         msg_box.exec_()
 
-        
-    
 
     def go_to_next_adjacent_frame(self):
         try:
@@ -508,10 +506,12 @@ class MainWindow(QMainWindow):
 
                 next_frame = self.frameSelector(next_frame_count)
                 next_frame.isActive = True
+                
             
                 next_frame_count += 1
                 self.active_frame = next_frame
                 self.active_frame.selected_state()
+                
         except:
 
             pass
@@ -653,6 +653,7 @@ class MainWindow(QMainWindow):
             active_fave = item.widget()
             if active_fave.isActive == True:
                 self.active_frame = active_fave
+                self.scroll_area.ensureWidgetVisible(active_fave)
                 return self.active_frame
 
     def start_recording(self):
