@@ -20,7 +20,7 @@ import pyaudio
 from timer import timer_class
 from microphone import AudioHandler
 from audioEditor import AudioTrimmer
-from graphocalEffects import *
+from graphicalEffects import *
 
 
 class MainWindow(QMainWindow):
@@ -315,34 +315,34 @@ class MainWindow(QMainWindow):
         """
         Visualizer
         """
-        self.pa = pyaudio.PyAudio()
-        self.chunk_size = 1024
-        self.sample_format = pyaudio.paInt16
-        self.channels = 1
-        self.rate = 44100
-        self.stream = self.pa.open(format=self.sample_format,
-                                    channels=self.channels,
-                                    rate=self.rate,
-                                    input=True,
-                                    frames_per_buffer=self.chunk_size)
+        # self.pa = pyaudio.PyAudio()
+        # self.chunk_size = 1024
+        # self.sample_format = pyaudio.paInt16
+        # self.channels = 1
+        # self.rate = 44100
+        # self.stream = self.pa.open(format=self.sample_format,
+        #                             channels=self.channels,
+        #                             rate=self.rate,
+        #                             input=True,
+        #                             frames_per_buffer=self.chunk_size)
 
-        self.waveform_data = None
-        self.fig = Figure()
-        self.canvas = FigureCanvas(self.fig)
-        self.ax = self.fig.add_subplot(111)
-        self.ax.set_ylim(-32768, 32767)
-        self.ax.set_xlim(0, self.chunk_size)
-        self.line, = self.ax.plot([], [], '-')
-        self.visualizer_layout.addWidget(self.canvas)
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.update_plot)
-        self.stream = self.pa.open(format=self.sample_format,
-                                   channels=self.channels,
-                                   rate=self.rate,
-                                   input=True,
-                                   frames_per_buffer=self.chunk_size)
-        self.timer.start(50)
-        self.visualizer_layout.addWidget(self.canvas)
+        # self.waveform_data = None
+        # self.fig = Figure()
+        # self.canvas = FigureCanvas(self.fig)
+        # self.ax = self.fig.add_subplot(111)
+        # self.ax.set_ylim(-32768, 32767)
+        # self.ax.set_xlim(0, self.chunk_size)
+        # self.line, = self.ax.plot([], [], '-')
+        # self.visualizer_layout.addWidget(self.canvas)
+        # self.timer = QtCore.QTimer()
+        # self.timer.timeout.connect(self.update_plot)
+        # self.stream = self.pa.open(format=self.sample_format,
+        #                            channels=self.channels,
+        #                            rate=self.rate,
+        #                            input=True,
+        #                            frames_per_buffer=self.chunk_size)
+        # self.timer.start(50)
+        # self.visualizer_layout.addWidget(self.canvas)
 
         self.record_widget = QWidget()
         self.record_widget_layout = QVBoxLayout(self.record_widget)
@@ -501,7 +501,7 @@ class MainWindow(QMainWindow):
         self.message_box_popup = False
         #ms to current dit
         self.dir_pop = False
-    
+
     def get_saving_directory(self):
         options = QFileDialog.Options()
         options |= QFileDialog.ShowDirsOnly
@@ -541,6 +541,7 @@ class MainWindow(QMainWindow):
         audio_trimmer.trim_files(value)
         audio_trimmer.combine_files(final_audio_path)
         msg_box = QMessageBox()
+        msg_box.setWindowTitle("Process Done")
         msg_box.setText("Task or process is done.")
         msg_box.exec_()
 
@@ -719,7 +720,6 @@ class MainWindow(QMainWindow):
     def redo_recording(self):
         if self.message_box_popup == False:
             msbox = self.show_message_box()
-
             if msbox == True:
                 self.redo.setEnabled(False)
                 self.active_frame.subMainTime()
@@ -732,10 +732,11 @@ class MainWindow(QMainWindow):
             self.redo.setEnabled(False)
             self.active_frame.subMainTime()
             self.start_worker.quit()
-            self.start_recording_worker()
+            self.start_recording()
+            
         else:
             pass
-
+    
 
     def show_message_box(self):
         # Create a message box
@@ -776,6 +777,7 @@ class MainWindow(QMainWindow):
         if self.audio_handler.playing == False:
             self.play.setIcon(QIcon("play_btn.png"))
             self.playback_start_pause = True
+            self.play.setEnabled(False)
             self.play_worker.quit()
             self.redo.setEnabled(True)
             self.record.setEnabled(True)
@@ -812,9 +814,9 @@ class MainWindow(QMainWindow):
     def start_recording_worker(self):
         self.folderCreator()
         if self.start_pause == True and self.doesFolderExist == True:
+            
             self.call_frame_timer_start()
             self.start_pause_main_timer()
-    
             self.doesMainTimerStarted = True
             self.record.setStyleSheet("""
             QPushButton {
@@ -836,17 +838,18 @@ class MainWindow(QMainWindow):
             self.record.setIcon(QIcon("pause-btn.png"))
             self.record.setIconSize(QSize(32, 32))
             self.active_frame.recording_state()
-            print(self.start_pause)
+            
             self.start_pause = False
             self.start_worker = Worker(self.start_recording)
             self.start_worker.start()
-           
+        
 
 
         elif self.start_pause == False:
-
-            self.main_timer.stopRecording()
+ 
+            
             self.call_frame_timer_stop()
+            self.main_timer.stopRecording()
 
             print(self.active_frame.time)
             self.record.setStyleSheet("""
@@ -874,12 +877,12 @@ class MainWindow(QMainWindow):
             self.redo.setEnabled(True)
             self.active_frame.selected_state()
             self.active_frame.time = self.frame_timer.timeElapsed
-            print(f' active frame time {self.active_frame.time}')
-            print(f' Frame timer elapsed time {self.frame_timer.timeElapsed}')
             self.active_frame.paren_timer = self.main_timer
             self.go_to_next_adjacent_frame()
         else:
-            print("Naa ra sa condition and problema")
+            pass   
+
+    
 
     def start_editing_title(self, event):
         self.title.setHidden(True)
@@ -1169,8 +1172,9 @@ class newFrame(QFrame):
     
     def subMainTime(self):
         try:
-            self.paren_timer.timeElapsed -= self.time
-            self.paren_timer.updateMainTimer()
+            if self.paren_timer.timeElapsed > 0:
+                self.paren_timer.timeElapsed -= self.time
+                self.paren_timer.updateMainTimer()
         except:
             pass
 
