@@ -361,7 +361,7 @@ class MainWindow(QMainWindow):
        
 
         # self.next_buton.clicked.connect(self.go_to_next_adjacent_frame)
-        self.record.clicked.connect(self.start_recording_worker)
+        self.record.clicked.connect(self.start_record_or_redo_validator)
         self.play.clicked.connect(self.play_recording_worker)
         self.redo.clicked.connect(self.redo_recording)
 
@@ -501,6 +501,10 @@ class MainWindow(QMainWindow):
         self.message_box_popup = False
         #ms to current dit
         self.dir_pop = False
+
+        # Start Session
+        self.session = False
+        self.redo_session_start = False
 
     def get_saving_directory(self):
         options = QFileDialog.Options()
@@ -725,6 +729,7 @@ class MainWindow(QMainWindow):
                 self.active_frame.subMainTime()
                 self.start_worker.quit()
                 self.start_recording_worker()
+                self.redo_session_start = True
             else:
                 pass
 
@@ -810,6 +815,28 @@ class MainWindow(QMainWindow):
         self.main_timer.stopRecording()
         self.call_frame_timer_stop()
         self.start_worker.quit()
+    
+    def start_record_or_redo_validator(self):
+
+        acf = self.activeFrameSelector()
+
+        if acf.time == 0 or self.session == False:
+            self.start_recording_worker()
+            self.session = True
+
+        elif acf.time > 0 and self.session == True and self.redo_session_start == False:
+            self.redo_recording()
+            print("Session not started")
+
+        elif acf.time > 0 and self.session == True and self.redo_session_start == True:
+            self.start_recording_worker()
+            self.session = True
+            self.redo_session_start = False
+
+   
+        else:
+            pass
+            
 
     def start_recording_worker(self):
         self.folderCreator()
@@ -846,43 +873,43 @@ class MainWindow(QMainWindow):
 
 
         elif self.start_pause == False:
- 
-            
-            self.call_frame_timer_stop()
-            self.main_timer.stopRecording()
-
-            print(self.active_frame.time)
-            self.record.setStyleSheet("""
-            QPushButton {
-                background-color: red; 
-                Border: none; 
-                border-radius: 22px;
-                color: white;
-                font-size: 18px;
-                padding-bottom: 2px;
-                }
-            QPushButton:hover {
-                background-color:#a70000;
-            }
-            QPushButton:pressed {
-                background-color:red;
-            }
-            """)
-            self.record.setIcon(QIcon())
-            self.record.setText("REC")
-            self.audio_handler.stop_recording()
-            self.start_pause = True
-            self.start_worker.quit()
-            self.play.setEnabled(True)
-            self.redo.setEnabled(True)
-            self.active_frame.selected_state()
-            self.active_frame.time = self.frame_timer.timeElapsed
-            self.active_frame.paren_timer = self.main_timer
-            self.go_to_next_adjacent_frame()
+            self.start_pause_isFalse()
         else:
             pass   
 
-    
+    def start_pause_isFalse(self):
+        self.call_frame_timer_stop()
+        self.main_timer.stopRecording()
+
+        print(self.active_frame.time)
+        self.record.setStyleSheet("""
+        QPushButton {
+            background-color: red; 
+            Border: none; 
+            border-radius: 22px;
+            color: white;
+            font-size: 18px;
+            padding-bottom: 2px;
+            }
+        QPushButton:hover {
+            background-color:#a70000;
+        }
+        QPushButton:pressed {
+            background-color:red;
+        }
+        """)
+        self.record.setIcon(QIcon())
+        self.record.setText("REC")
+        self.audio_handler.stop_recording()
+        self.start_pause = True
+        self.start_worker.quit()
+        self.play.setEnabled(True)
+        self.redo.setEnabled(True)
+        self.active_frame.selected_state()
+        self.active_frame.time = self.frame_timer.timeElapsed
+        self.active_frame.paren_timer = self.main_timer
+        self.go_to_next_adjacent_frame()
+
 
     def start_editing_title(self, event):
         self.title.setHidden(True)
@@ -1162,7 +1189,6 @@ class newFrame(QFrame):
             border: none;
             border-radius: 10px;
             background-color: white;
-            
         }
          QFrame:hover {
                 border: 1px solid #ff6eb7;
