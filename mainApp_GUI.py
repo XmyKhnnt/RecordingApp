@@ -1,8 +1,6 @@
 import os
 import sys
-import time
-import pyaudio
-import pyaudio
+
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
@@ -16,11 +14,13 @@ from PyQt5.QtGui import (QColor, QFont, QIcon, QKeyEvent, QKeySequence,
 from PyQt5.QtWidgets import (QApplication, QDialog, QFrame,
                              QGraphicsDropShadowEffect, QHBoxLayout, QLabel,
                              QLineEdit, QMainWindow, QPushButton, QScrollArea,
-                             QSizePolicy, QTextEdit, QVBoxLayout, QWidget, QComboBox, QMessageBox, QSpacerItem, QCheckBox)
+                             QSizePolicy, QTextEdit, QVBoxLayout, QWidget, QComboBox, QMessageBox, QSpacerItem, QCheckBox, QFileDialog)
 from pyaudio import PyAudio
+import pyaudio
 from timer import timer_class
 from microphone import AudioHandler
 from audioEditor import AudioTrimmer
+from graphocalEffects import *
 
 
 class MainWindow(QMainWindow):
@@ -86,6 +86,7 @@ class MainWindow(QMainWindow):
        
 
         self.save_btn = QPushButton("save")
+        # self.save_btn.setGraphicsEffect(self.shadow)
         # self.import_btn = QPushButton("import")
         # self.export_btn = QPushButton("export")
 
@@ -95,7 +96,7 @@ class MainWindow(QMainWindow):
         # Set Shadow to buttons
         ## Bug for for adding shadow
         
-        self.save_btn.setGraphicsEffect(self.shadow)
+        self.save_btn.setGraphicsEffect(save_button_shadow)
         # self.import_btn.setGraphicsEffect(self.shadow)
         # self.export_btn.setGraphicsEffect(self.shadow)
 
@@ -104,7 +105,7 @@ class MainWindow(QMainWindow):
         self.save_btn.setMouseTracking(True)
         self.save_btn.setStyleSheet("""
             QPushButton {
-                background-color: #1d86d0; 
+                background-color: #ff8c00; 
                 Border: none; 
                 border-radius: 12px;
                 color: white;
@@ -113,55 +114,17 @@ class MainWindow(QMainWindow):
 
             }
             QPushButton:hover {
-                background-color:#1d41FF;
+                background-color:#ff6f00;
             }
             QPushButton:pressed {
-                background-color: #1d86d0;
+                background-color: #ff8c00;
             }
         """)
         self.save_btn.setFixedSize(QSize(85, 25))
         self.save_btn.clicked.connect(self.save_and_combine_files)
 
-        # # import_btn 
-        # self.import_btn.setStyleSheet("""
-        #     QPushButton {
-        #         background-color: #4b4b4b; 
-        #         Border: none; 
-        #         border-radius: 12px;
-        #         color: white;
-        #         font-size: 18px;
-        #         padding-bottom: 2px;
-        #         }
-        #     QPushButton:hover {
-        #         background-color:black;
-        #     }
-        #     QPushButton:pressed {
-        #         background-color: #4b4b4b;
-        #     }
-        # """)
-
-        # self.import_btn.setFixedSize(QSize(85, 25))
-
-        # # Export btn
-        # self.export_btn.setStyleSheet("""
-        #    QPushButton {
-        #         background-color: #4b4b4b; 
-        #         Border: none; 
-        #         border-radius: 12px;
-        #         color: white;
-        #         font-size: 18px;
-        #         padding-bottom: 2px;
-        #         }
-        #     QPushButton:hover {
-        #         background-color:black;
-        #     }
-        #     QPushButton:pressed {
-        #         background-color: #4b4b4b;
-        #     }
-        # """)
-
-        # self.export_btn.setFixedSize(QSize(85, 25))
         self.add_frame_button = QPushButton("separate")
+        self.add_frame_button.setGraphicsEffect(separate_button_shadow)
 
         self.add_frame_button.setFixedSize(QSize(80, 25))
         self.add_frame_button.clicked.connect(self.addFrame)
@@ -184,6 +147,30 @@ class MainWindow(QMainWindow):
 
             
          """)
+        
+        self.add_another_frame = QPushButton("+")
+        self.add_another_frame.setMinimumHeight(25)
+        self.add_another_frame.setMinimumWidth(25)
+        self.add_another_frame.clicked.connect(self.add_another_frame_to_scroll_area)
+        self.add_another_frame.setStyleSheet("""
+            QPushButton {
+                background-color: #1d86d0; 
+                Border: none; 
+                border-radius: 12px;
+                color: white;
+                font-size: 18px;
+                padding-bottom: 2px;
+             }
+             QPushButton:hover {
+                background-color: #1d41FF; 
+             }
+             QPushButton:pressed {
+                background-color: #1d86d0;
+            }
+
+            
+         """)
+
 
 # ------------------------------------------------------------
         # Pyaduio Instance
@@ -263,6 +250,7 @@ class MainWindow(QMainWindow):
         self.button_layout.addStretch(1)
         self.button_layout.addWidget(self.recording_gap_text_input)
         self.button_layout.addWidget(self.input_device_combo)
+        self.button_layout.addWidget(self.add_another_frame)
         self.button_layout.addWidget(self.add_frame_button)
         # self.button_layout.addWidget(self.import_btn)
         # self.button_layout.addWidget(self.export_btn)
@@ -513,20 +501,45 @@ class MainWindow(QMainWindow):
         self.message_box_popup = False
         #ms to current dit
         self.dir_pop = False
+    
+    def get_saving_directory(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.ShowDirsOnly
+        file_dialog = QFileDialog.getExistingDirectory(self, "Select Directory", "", options=options)
+
+        return file_dialog
+
+    def add_another_frame_to_scroll_area(self):
+                            # create new frame and add to scroll area
+            sequence = self.count_number_of_frame() + 2
+            newFrame_instance = newFrame(self.scroll_area_widget, sequence, self.frame_counter)
+            newFrame_instance.setActiveFrame(self.active_frame)
+            newFrame_instance.folder = self.title_string
+            try:
+                newFrame_instance.paren_timer = self.main_timer
+            except:
+                pass
+            self.scroll_area_layout.addWidget(newFrame_instance)
+
     def update_plot(self):
         data = self.stream.read(self.chunk_size, exception_on_overflow=False)
         data_int = np.frombuffer(data, dtype=np.int16)
         self.line.set_data(np.arange(len(data_int)), data_int)
         self.canvas.draw()
-    def save_and_combine_files(self):
 
+
+    def save_and_combine_files(self):
+        
         path = self.title_string
+        final_audio_path = self.get_saving_directory()
         print(path)
         audio_trimmer = AudioTrimmer(path)
         timer_interval = self.recording_gap_text_input.text()
-        audio_trimmer.trim_files(float(timer_interval))
-        audio_trimmer.combine_files()
-        
+        if timer_interval == "":
+            timer_interval = 0
+        value = float(timer_interval)
+        audio_trimmer.trim_files(value)
+        audio_trimmer.combine_files(final_audio_path)
         msg_box = QMessageBox()
         msg_box.setText("Task or process is done.")
         msg_box.exec_()
@@ -547,6 +560,7 @@ class MainWindow(QMainWindow):
                 next_frame_count += 1
                 self.active_frame = next_frame
                 self.active_frame.selected_state()
+                self.scroll_area.ensureWidgetVisible(self.active_frame)
                 
         except:
 
@@ -631,7 +645,6 @@ class MainWindow(QMainWindow):
             
         # Dummy Event
     def addFrame(self):
-
         try:
             if len(self.new_frame.text_place_holder.toPlainText().splitlines()) > 1:
                         
@@ -689,8 +702,8 @@ class MainWindow(QMainWindow):
             active_fave = item.widget()
             if active_fave.isActive == True:
                 self.active_frame = active_fave
-                self.scroll_area.ensureWidgetVisible(active_fave)
                 return self.active_frame
+    
 
     def start_recording(self):
 
@@ -1246,7 +1259,6 @@ class newFrame(QFrame):
         if event.button() == Qt.LeftButton:
             # scroll area frame counter function to revert the frame to previus state
             self.scroll_area_frame_counter(self.for_scroll_counter)
-
             self.isActive = True
             self.setStyleSheet("""
             QFrame {
