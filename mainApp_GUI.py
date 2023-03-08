@@ -315,34 +315,34 @@ class MainWindow(QMainWindow):
         """
         Visualizer
         """
-        # self.pa = pyaudio.PyAudio()
-        # self.chunk_size = 1024
-        # self.sample_format = pyaudio.paInt16
-        # self.channels = 1
-        # self.rate = 44100
-        # self.stream = self.pa.open(format=self.sample_format,
-        #                             channels=self.channels,
-        #                             rate=self.rate,
-        #                             input=True,
-        #                             frames_per_buffer=self.chunk_size)
+        self.pa = pyaudio.PyAudio()
+        self.chunk_size = 1024
+        self.sample_format = pyaudio.paInt16
+        self.channels = 1
+        self.rate = 44100
+        self.stream = self.pa.open(format=self.sample_format,
+                                    channels=self.channels,
+                                    rate=self.rate,
+                                    input=True,
+                                    frames_per_buffer=self.chunk_size)
 
-        # self.waveform_data = None
-        # self.fig = Figure()
-        # self.canvas = FigureCanvas(self.fig)
-        # self.ax = self.fig.add_subplot(111)
-        # self.ax.set_ylim(-32768, 32767)
-        # self.ax.set_xlim(0, self.chunk_size)
-        # self.line, = self.ax.plot([], [], '-')
-        # self.visualizer_layout.addWidget(self.canvas)
-        # self.timer = QtCore.QTimer()
-        # self.timer.timeout.connect(self.update_plot)
-        # self.stream = self.pa.open(format=self.sample_format,
-        #                            channels=self.channels,
-        #                            rate=self.rate,
-        #                            input=True,
-        #                            frames_per_buffer=self.chunk_size)
-        # self.timer.start(50)
-        # self.visualizer_layout.addWidget(self.canvas)
+        self.waveform_data = None
+        self.fig = Figure()
+        self.canvas = FigureCanvas(self.fig)
+        self.ax = self.fig.add_subplot(111)
+        self.ax.set_ylim(-32768, 32767)
+        self.ax.set_xlim(0, self.chunk_size)
+        self.line, = self.ax.plot([], [], '-')
+        self.visualizer_layout.addWidget(self.canvas)
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update_plot)
+        self.stream = self.pa.open(format=self.sample_format,
+                                   channels=self.channels,
+                                   rate=self.rate,
+                                   input=True,
+                                   frames_per_buffer=self.chunk_size)
+        self.timer.start(50)
+        self.visualizer_layout.addWidget(self.canvas)
 
         self.record_widget = QWidget()
         self.record_widget_layout = QVBoxLayout(self.record_widget)
@@ -546,7 +546,7 @@ class MainWindow(QMainWindow):
         audio_trimmer.combine_files(final_audio_path)
         msg_box = QMessageBox()
         msg_box.setWindowTitle("Process Done")
-        msg_box.setText("Task or process is done.")
+        msg_box.setText("File Saved.")
         msg_box.exec_()
 
 
