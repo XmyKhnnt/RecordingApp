@@ -484,8 +484,6 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
         self.new_frame.text_place_holder.setFocus()
 
-
-
         # Flags 
         self.start_pause = True
         self.playback_start_pause = True
@@ -533,7 +531,6 @@ class MainWindow(QMainWindow):
 
 
     def save_and_combine_files(self):
-        
     
         path = self.title_string
         final_audio_path = self.get_saving_directory()
