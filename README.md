@@ -31,6 +31,9 @@ Creating professional-grade voice-overs has never been easier! Follow these simp
 5. Once you've recorded all the sections, our app will splice them together into a polished final product.
 6. Finally, hit "Save". Easy!
 
-With our intuitive and easy-to-use recording app, you can create high-quality voice-overs in no time. Download the app today and start recording your next masterpiec
+<p>With our intuitive and easy-to-use recording app, you can create high-quality voice-overs in no time. Download the app today and start recording your next masterpiec </p>
+
+
+
 
 
