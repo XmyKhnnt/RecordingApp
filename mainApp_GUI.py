@@ -28,8 +28,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         # set window title and size
         self.setFocusPolicy(Qt.StrongFocus)
-        self.setWindowTitle("Logo Brand")
-        self.setWindowIcon(QIcon("play_btn.png"))
+        self.setWindowTitle("Rapid Voice Over")
+        self.setWindowIcon(QIcon("voice_over_app_logo.ico"))
         self.setMinimumSize(800, 600)
         self.setStyleSheet("Background-color: White;")
         QApplication.setWindowIcon(QIcon('play_btn.png'))
@@ -534,6 +534,7 @@ class MainWindow(QMainWindow):
 
     def save_and_combine_files(self):
         
+    
         path = self.title_string
         final_audio_path = self.get_saving_directory()
         print(path)
