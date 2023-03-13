@@ -19,7 +19,7 @@ class AudioTrimmer:
             
             for file in os.listdir(self.folder_path):
                 
-                if file.endswith(".wav") and file.startswith("frame"):
+                if file.endswith(".mp3") and file.startswith("frame"):
                     print(f"{file}")
                     # load the audio file
                     audio = AudioSegment.from_file(os.path.join(self.folder_path, file))
@@ -64,7 +64,7 @@ class AudioTrimmer:
                 combined_audio += audio
 
             # export the combined audio to a new file
-            self.combined_file = os.path.join(dir_path, "combined_file.wav")
-            combined_audio.export(self.combined_file, format="wav")
+            self.combined_file = os.path.join(dir_path, "combined_file.mp3")
+            combined_audio.export(self.combined_file, format="mp3")
         except:
             pass

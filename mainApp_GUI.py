@@ -317,34 +317,34 @@ class MainWindow(QMainWindow):
         """
         Visualizer
         """
-        self.pa = pyaudio.PyAudio()
-        self.chunk_size = 1024
-        self.sample_format = pyaudio.paInt16
-        self.channels = 1
-        self.rate = 44100
-        self.stream = self.pa.open(format=self.sample_format,
-                                    channels=self.channels,
-                                    rate=self.rate,
-                                    input=True,
-                                    frames_per_buffer=self.chunk_size)
+        # self.pa = pyaudio.PyAudio()
+        # self.chunk_size = 1024
+        # self.sample_format = pyaudio.paInt16
+        # self.channels = 1
+        # self.rate = 44100
+        # self.stream = self.pa.open(format=self.sample_format,
+        #                             channels=self.channels,
+        #                             rate=self.rate,
+        #                             input=True,
+        #                             frames_per_buffer=self.chunk_size)
 
-        self.waveform_data = None
-        self.fig = Figure()
-        self.canvas = FigureCanvas(self.fig)
-        self.ax = self.fig.add_subplot(111)
-        self.ax.set_ylim(-32768, 32767)
-        self.ax.set_xlim(0, self.chunk_size)
-        self.line, = self.ax.plot([], [], '-')
-        self.visualizer_layout.addWidget(self.canvas)
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.update_plot)
-        self.stream = self.pa.open(format=self.sample_format,
-                                   channels=self.channels,
-                                   rate=self.rate,
-                                   input=True,
-                                   frames_per_buffer=self.chunk_size)
-        self.timer.start(50)
-        self.visualizer_layout.addWidget(self.canvas)
+        # self.waveform_data = None
+        # self.fig = Figure()
+        # self.canvas = FigureCanvas(self.fig)
+        # self.ax = self.fig.add_subplot(111)
+        # self.ax.set_ylim(-32768, 32767)
+        # self.ax.set_xlim(0, self.chunk_size)
+        # self.line, = self.ax.plot([], [], '-')
+        # self.visualizer_layout.addWidget(self.canvas)
+        # self.timer = QtCore.QTimer()
+        # self.timer.timeout.connect(self.update_plot)
+        # self.stream = self.pa.open(format=self.sample_format,
+        #                            channels=self.channels,
+        #                            rate=self.rate,
+        #                            input=True,
+        #                            frames_per_buffer=self.chunk_size)
+        # self.timer.start(50)
+        # self.visualizer_layout.addWidget(self.canvas)
 
         self.record_widget = QWidget()
         self.record_widget_layout = QVBoxLayout(self.record_widget)
@@ -729,7 +729,7 @@ class MainWindow(QMainWindow):
         file = self.recording_name()
         try:
             self.audio_handler.audio_device_index = self.input_device_combo.currentIndex()
-            self.audio_handler.start_recording(self.folder_name,f"{file}.wav")
+            self.audio_handler.start_recording(self.folder_name,f"{file}.mp3")
         except:
             self.device_mic_error = True
             print("yes dri ang error")
@@ -797,7 +797,7 @@ class MainWindow(QMainWindow):
         try:
             file = self.recording_name()
             if self.active_frame.time > 0:
-                self.audio_handler.start_playback(f"{self.folder_name}/{file}.wav")
+                self.audio_handler.start_playback(f"{self.folder_name}/{file}.mp3")
             if self.audio_handler.playing == False:
                 self.play.setIcon(QIcon("play_btn.png"))
                 self.playback_start_pause = True
