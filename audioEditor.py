@@ -1,5 +1,7 @@
-from pydub import AudioSegment
+from pydub import AudioSegment, silence
 import os
+
+
 
 class AudioTrimmer:
 
@@ -11,7 +13,7 @@ class AudioTrimmer:
         self.output_folder = self.folder_path
 
     def trim_files(self, end_time, start_time=0):
-        try:
+       
             # delete existing trimmed files
             if os.path.exists(self.trimFolder):
                 for file in os.listdir(self.trimFolder):
@@ -41,11 +43,9 @@ class AudioTrimmer:
                     trimmed_audio.export(trimmed_file, format=file.split(".")[-1])
 
                     self.trimmed_files.append(trimmed_file)
-        except:
-            pass
+  
 
     def combine_files(self, dir_path):
-
         if not self.trimmed_files:
             print("No trimmed files found.")
             return
@@ -63,8 +63,22 @@ class AudioTrimmer:
                 audio = AudioSegment.from_file(file)
                 combined_audio += audio
 
+            # detect and remove silence
+            non_silent_audio = AudioSegment.empty()
+            silent_ranges = silence.detect_silence(combined_audio, min_silence_len=1000, silence_thresh=-50)
+            for i, (start, end) in enumerate(silent_ranges):
+                # add non-silent audio before the current silence segment
+                non_silent_audio += combined_audio[:start]
+
+                # add a small crossfade (100 ms) between the current silence segment and the next non-silent segment
+                if i < len(silent_ranges) - 1:
+                    next_start = silent_ranges[i+1][0]
+                    non_silent_audio += combined_audio[end:min(end+100, next_start)].fade_out(100)
+
             # export the combined audio to a new file
             self.combined_file = os.path.join(dir_path, "combined_file.mp3")
-            combined_audio.export(self.combined_file, format="mp3")
+            non_silent_audio.export(self.combined_file, format="mp3")
+
         except:
+            print("nag error sya sa trimmer")
             pass

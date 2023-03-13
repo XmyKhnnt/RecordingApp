@@ -543,6 +543,7 @@ class MainWindow(QMainWindow):
                 timer_interval = 0
             value = float(timer_interval)
             print(f'Current Value of trimmer{value}')
+
             audio_trimmer.trim_files(value)
             audio_trimmer.combine_files(final_audio_path)
             msg_box = QMessageBox()
