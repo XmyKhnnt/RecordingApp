@@ -194,7 +194,7 @@ class MainWindow(QMainWindow):
         self.recording_gap_combo.addItem("2")
         # Changing Combo to Text input
 
-        float_regex = QRegExp("[+-]?[0-9]+(\.[0-9]*)?")
+        float_regex = QRegExp("[+-]?([0-9]*[.])?[0-9]+")
         self.input_to_only_int_validator = QRegExpValidator(float_regex)
         self.recording_gap_text_input = QLineEdit()
         self.recording_gap_text_input.setValidator(self.input_to_only_int_validator)
@@ -542,6 +542,7 @@ class MainWindow(QMainWindow):
             if timer_interval == "":
                 timer_interval = 0
             value = float(timer_interval)
+            print(f'Current Value of trimmer{value}')
             audio_trimmer.trim_files(value)
             audio_trimmer.combine_files(final_audio_path)
             msg_box = QMessageBox()
